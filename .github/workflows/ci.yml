@@ -19,7 +19,7 @@ jobs:
     name: macOS (Swift 6.2, debug)
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Configure git for private repos
         run: git config --global url."https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/".insteadOf "https://github.com/"
@@ -66,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     container: swift:6.2
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Configure git for private repos
         run: git config --global url."https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/".insteadOf "https://github.com/"
@@ -89,7 +89,7 @@ jobs:
     runs-on: ubuntu-latest
     container: swift:6.2
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Configure git for private repos
         run: git config --global url."https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/".insteadOf "https://github.com/"
@@ -111,7 +111,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Configure git for private repos
         run: git config --global url."https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/".insteadOf "https://github.com/"
