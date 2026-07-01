@@ -31,7 +31,7 @@ jobs:
         run: swift --version
 
       - name: Cache Swift packages
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: .build
           key: macos-swift62-spm-v4-${{ hashFiles('Package.swift', 'Package@*.swift') }}
@@ -72,7 +72,7 @@ jobs:
         run: git config --global url."https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/".insteadOf "https://github.com/"
 
       - name: Cache Swift packages
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: .build
           key: linux-swift62-spm-v4-${{ hashFiles('Package.swift', 'Package@*.swift') }}
@@ -95,7 +95,7 @@ jobs:
         run: git config --global url."https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/".insteadOf "https://github.com/"
 
       - name: Cache Swift packages
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: .build
           key: linux-swift62-compat-spm-v4-${{ hashFiles('Package.swift', 'Package@*.swift') }}
@@ -125,7 +125,7 @@ jobs:
         run: swift --version
 
       - name: Cache Swift packages
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: .build
           key: windows-swift62-spm-v2-${{ hashFiles('Package.swift', 'Package@*.swift') }}
