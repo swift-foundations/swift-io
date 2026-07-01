@@ -2,8 +2,10 @@
 //  exports.swift
 //  swift-io
 //
-//  Created by Coen ten Thije Boonkkamp on 24/12/2025.
-//
 
-// Export the IO enum to resolve module/type name conflict
-@_exported import enum IO_Primitives.IO
+// `import IO` gives access to the strategy runtimes (Event / Completion
+// actors) and the host-adaptive selector. Domain packages define their
+// own Capabilities and compose per-strategy factories on top.
+@_exported public import IO_Primitives
+@_exported public import IO_Events
+@_exported public import IO_Completions

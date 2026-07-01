@@ -1,0 +1,9 @@
+# .github/metadata.yaml
+# Triaged by AI-assisted bulk pass (2026-04-29).
+description: "A high-performance async I/O executor for Swift."
+topics:
+  - foundations
+  - io
+homepage: "https://swift-institute.org"
+readme:
+  family: E

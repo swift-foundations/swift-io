@@ -1,4 +1,4 @@
-// swift-tools-version: 6.2
+// swift-tools-version: 6.3.1
 
 import PackageDescription
 
@@ -9,161 +9,190 @@ let package = Package(
         .iOS(.v26),
         .tvOS(.v26),
         .watchOS(.v26),
+        .visionOS(.v26)
     ],
     products: [
         .library(name: "IO", targets: ["IO"]),
-        .library(name: "IO Primitives", targets: ["IO Primitives"]),
-        .library(name: "IO Blocking", targets: ["IO Blocking"]),
-        .library(name: "IO Blocking Threads", targets: ["IO Blocking Threads"]),
         .library(name: "IO Events", targets: ["IO Events"]),
         .library(name: "IO Completions", targets: ["IO Completions"]),
         .library(name: "IO Test Support", targets: ["IO Test Support"]),
+        .library(name: "IO Completions Test Support", targets: ["IO Completions Test Support"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/swift-standards/swift-time-standard.git", from: "0.2.0"),
-        .package(url: "https://github.com/swift-standards/swift-standards", from: "0.24.1"),
-        .package(url: "https://github.com/apple/swift-nio", from: "2.70.0"),
-        .package(url: "https://github.com/coenttb/swift-kernel.git", from: "0.7.0"),
-        .package(path: "../swift-async"),
-        .package(path: "../swift-memory"),
-        .package(path: "../swift-buffer"),
+        .package(url: "https://github.com/swift-foundations/swift-kernel.git", branch: "main"),
+        .package(url: "https://github.com/swift-foundations/swift-async.git", branch: "main"),
+        .package(url: "https://github.com/swift-foundations/swift-memory.git", branch: "main"),
+        .package(url: "https://github.com/swift-foundations/swift-executors.git", branch: "main"),
+        .package(url: "https://github.com/swift-foundations/swift-threads.git", branch: "main"),
+        .package(url: "https://github.com/swift-foundations/swift-synchronizers.git", branch: "main"),
+        .package(url: "https://github.com/swift-primitives/swift-io-primitives.git", branch: "main"),
+        .package(url: "https://github.com/swift-primitives/swift-clock-primitives.git", branch: "main"),
+        .package(url: "https://github.com/swift-primitives/swift-buffer-primitives.git", branch: "main"),
+        .package(url: "https://github.com/swift-primitives/swift-hash-primitives.git", branch: "main"),
+        .package(url: "https://github.com/swift-primitives/swift-queue-primitives.git", branch: "main"),
+        .package(url: "https://github.com/swift-primitives/swift-dimension-primitives.git", branch: "main"),
+        .package(url: "https://github.com/swift-primitives/swift-ownership-primitives.git", branch: "main"),
+        .package(url: "https://github.com/swift-primitives/swift-executor-primitives.git", branch: "main"),
+        .package(url: "https://github.com/swift-primitives/swift-heap-primitives.git", branch: "main"),
+        .package(url: "https://github.com/swift-primitives/swift-array-primitives.git", branch: "main"),
+        .package(url: "https://github.com/swift-primitives/swift-dictionary-primitives.git", branch: "main"),
+        .package(url: "https://github.com/swift-primitives/swift-hash-table-primitives.git", branch: "main"),
+        .package(url: "https://github.com/swift-primitives/swift-buffer-linear-primitives.git", branch: "main"),
+        .package(url: "https://github.com/swift-primitives/swift-storage-primitives.git", branch: "main"),
+        .package(url: "https://github.com/swift-primitives/swift-memory-heap-primitives.git", branch: "main"),
+        .package(url: "https://github.com/swift-primitives/swift-memory-allocation-primitives.git", branch: "main"),
+        .package(url: "https://github.com/swift-primitives/swift-memory-primitives.git", branch: "main"),
+        .package(url: "https://github.com/swift-primitives/swift-span-primitives.git", branch: "main"),
+        .package(url: "https://github.com/swift-primitives/swift-either-primitives.git", branch: "main"),
+        .package(url: "https://github.com/swift-primitives/swift-witness-primitives.git", branch: "main"),
+        .package(url: "https://github.com/swift-foundations/swift-witnesses.git", branch: "main"),
     ],
     targets: [
-        .target(
-            name: "IO Primitives",
-            dependencies: [
-                .product(name: "Kernel", package: "swift-kernel"),
-                .product(name: "Buffer", package: "swift-buffer"),
-                .product(name: "Binary", package: "swift-standards"),
-            ]
-        ),
-        .target(
-            name: "IO Blocking",
-            dependencies: [
-                "IO Primitives",
-                .product(name: "Clocks", package: "swift-time-standard"),
-            ]
-        ),
-        .target(
-            name: "IO Blocking Threads",
-            dependencies: ["IO Blocking"],
-            swiftSettings: [
-                .define("IO_TESTING", .when(configuration: .debug))
-            ]
-        ),
-        .target(
-            name: "IO",
-            dependencies: [
-                "IO Blocking",
-                "IO Blocking Threads",
-                "IO Events",
-                "IO Completions",
-                .product(name: "Memory", package: "swift-memory"),
-            ]
-        ),
+
+        // MARK: - Events (strategy-only, domain-agnostic reactor)
+
         .target(
             name: "IO Events",
             dependencies: [
-                "IO Primitives",
                 .product(name: "Kernel", package: "swift-kernel"),
+                .product(name: "IO Primitives", package: "swift-io-primitives"),
+                .product(name: "Executors", package: "swift-executors"),
                 .product(name: "Async", package: "swift-async"),
-                .product(name: "Buffer", package: "swift-buffer"),
-                .product(name: "Binary", package: "swift-standards"),
+                .product(name: "Hash Primitives", package: "swift-hash-primitives"),
+                .product(name: "Heap Primitive", package: "swift-heap-primitives"),
+                .product(name: "Buffer Primitives", package: "swift-buffer-primitives"),
+                .product(name: "Memory Primitives", package: "swift-memory-primitives"),
+                .product(name: "Dictionary Primitives", package: "swift-dictionary-primitives"),
+                .product(name: "Witness Primitives", package: "swift-witness-primitives"),
+                .product(name: "Witnesses", package: "swift-witnesses"),
+                .product(name: "Either Primitives", package: "swift-either-primitives"),
             ]
         ),
+
+        // MARK: - Completions (strategy-only, domain-agnostic proactor)
+
         .target(
             name: "IO Completions",
             dependencies: [
-                "IO Primitives",
-                "IO Events",
                 .product(name: "Kernel", package: "swift-kernel"),
-                .product(name: "Buffer", package: "swift-buffer"),
-                .product(name: "Memory", package: "swift-memory"),
+                .product(name: "Kernel Completion", package: "swift-kernel"),
+                .product(name: "IO Primitives", package: "swift-io-primitives"),
+                .product(name: "Executors", package: "swift-executors"),
+                .product(name: "Async", package: "swift-async"),
+                .product(name: "Memory Primitives", package: "swift-memory-primitives"),
+                .product(name: "Dictionary Primitives", package: "swift-dictionary-primitives"),
+                .product(name: "Hash Indexed Primitive", package: "swift-hash-table-primitives"),
+                .product(name: "Hash Tagged Primitives", package: "swift-hash-primitives"),
+                .product(name: "Buffer Primitive", package: "swift-buffer-primitives"),
+                .product(name: "Buffer Linear Primitive", package: "swift-buffer-linear-primitives"),
+                .product(name: "Buffer Linear Primitives", package: "swift-buffer-linear-primitives"),
+                .product(name: "Storage Primitive", package: "swift-storage-primitives"),
+                .product(name: "Storage Contiguous Primitives", package: "swift-storage-primitives"),
+                .product(name: "Memory Heap Primitives", package: "swift-memory-heap-primitives"),
+                .product(name: "Memory Allocator Primitive", package: "swift-memory-allocation-primitives"),
+                .product(name: "Synchronizer Blocking", package: "swift-synchronizers"),
             ]
         ),
-        .testTarget(
-            name: "IO Primitives Tests",
+
+        // MARK: - Umbrella (strategies + host-adaptive selector)
+
+        .target(
+            name: "IO",
             dependencies: [
-                "IO Primitives",
-                .product(name: "StandardsTestSupport", package: "swift-standards"),
+                "IO Events",
+                "IO Completions",
+                .product(name: "Kernel", package: "swift-kernel"),
+                .product(name: "IO Primitives", package: "swift-io-primitives"),
+                .product(name: "Either Primitives", package: "swift-either-primitives"),
             ]
         ),
-        .testTarget(
-            name: "IO Blocking Tests",
-            dependencies: [
-                "IO Blocking",
-                "IO Test Support",
-                .product(name: "StandardsTestSupport", package: "swift-standards"),
-            ]
-        ),
+
+        // MARK: - Test Support (hosts the Basic domain — consumed only by tests)
+        //
+        // Basic.Capabilities + Basic.Error + Kernel.Thread.Actor+Basic
+        // syscall extensions + per-strategy factories live here so the
+        // production surface of swift-io remains strategy-only. Downstream
+        // production packages (swift-file-system, swift-sockets,
+        // swift-server) define their own domain Capabilities.
+
         .target(
             name: "IO Test Support",
             dependencies: [
-                "IO Blocking Threads",
+                .product(name: "Span Raw Primitives", package: "swift-span-primitives"),
+                "IO",
+                .product(name: "Kernel", package: "swift-kernel"),
                 .product(name: "Kernel Test Support", package: "swift-kernel"),
+                .product(name: "IO Primitives", package: "swift-io-primitives"),
+                .product(name: "Thread Actor", package: "swift-threads"),
+                .product(name: "Executors", package: "swift-executors"),
+                .product(name: "Buffer Primitives", package: "swift-buffer-primitives"),
+                .product(name: "Memory Primitives", package: "swift-memory-primitives"),
             ],
             path: "Tests/Support"
         ),
-        .testTarget(
-            name: "IO Blocking Threads Tests",
+
+        .target(
+            name: "IO Completions Test Support",
             dependencies: [
-                "IO Blocking Threads",
+                "IO Completions",
+                "IO Events",
                 "IO Test Support",
-                .product(name: "StandardsTestSupport", package: "swift-standards"),
-            ]
+                .product(name: "Synchronizer Blocking", package: "swift-synchronizers"),
+            ],
+            path: "Tests/Completions Support"
         ),
+
+        // MARK: - Tests
+
         .testTarget(
-            name: "IO Tests",
+            name: "IO Basic Tests",
             dependencies: [
-                "IO",
-                .product(name: "StandardsTestSupport", package: "swift-standards"),
-            ]
+                "IO Test Support",
+            ],
+            path: "Tests/IO Blocking Tests"
         ),
         .testTarget(
             name: "IO Events Tests",
             dependencies: [
                 "IO Events",
-                .product(name: "StandardsTestSupport", package: "swift-standards"),
+                "IO Test Support",
+                .product(name: "Heap Primitive", package: "swift-heap-primitives"),
             ]
         ),
         .testTarget(
             name: "IO Completions Tests",
             dependencies: [
                 "IO Completions",
-                .product(name: "StandardsTestSupport", package: "swift-standards"),
+                "IO Completions Test Support",
             ]
         ),
         .testTarget(
-            name: "IO Benchmarks",
+            name: "IO Tests",
             dependencies: [
                 "IO",
                 "IO Test Support",
-                .product(name: "NIOCore", package: "swift-nio"),
-                .product(name: "NIOPosix", package: "swift-nio"),
-                .product(name: "StandardsTestSupport", package: "swift-standards"),
-            ],
-            path: "Tests/IO Benchmarks"
+            ]
         ),
-        .testTarget(
-            name: "IO Events Benchmarks",
-            dependencies: [
-                "IO Events",
-                .product(name: "NIOCore", package: "swift-nio"),
-                .product(name: "NIOPosix", package: "swift-nio"),
-                .product(name: "StandardsTestSupport", package: "swift-standards"),
-            ],
-            path: "Tests/IO Events Benchmarks"
-        ),
+        // Benchmarks moved to Benchmarks/io-bench/ (nested package with swift-testing .timed())
+        // Run: cd Benchmarks/io-bench && swift test
     ]
 )
 
-for target in package.targets where ![.system, .binary, .plugin].contains(target.type) {
-    let settings: [SwiftSetting] = [
+for target in package.targets where ![.system, .binary, .plugin, .macro].contains(target.type) {
+    let ecosystem: [SwiftSetting] = [
+        .strictMemorySafety(),
         .enableUpcomingFeature("ExistentialAny"),
         .enableUpcomingFeature("InternalImportsByDefault"),
         .enableUpcomingFeature("MemberImportVisibility"),
+        .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+        .enableExperimentalFeature("LifetimeDependence"),
+        .enableExperimentalFeature("Lifetimes"),
+        .enableExperimentalFeature("SuppressedAssociatedTypes"),
+        .enableUpcomingFeature("InferIsolatedConformances"),
+        .enableUpcomingFeature("LifetimeDependence"),
     ]
-    target.swiftSettings = (target.swiftSettings ?? []) + settings
-}
- 
 
+    let package: [SwiftSetting] = []
+
+    target.swiftSettings = (target.swiftSettings ?? []) + ecosystem + package
+}

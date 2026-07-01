@@ -1,294 +1,188 @@
 //
-//  IO.Event.Fake.swift
+//  Event.Fake.swift
 //  swift-io
 //
-//  Deterministic fake driver for testing non-blocking I/O invariants.
+//  Deterministic fake event source for testing non-blocking I/O invariants.
 //
 
 import Synchronization
+import IO_Test_Support
+@_spi(Syscall) @_spi(Internal) import Kernel
 
-@testable import IO_Events
+@_spi(Syscall) @testable import IO_Events
 
-// MARK: - Fake Driver
+// MARK: - Fake Source
 
-extension IO.Event {
-    /// Deterministic fake driver for testing.
-    ///
-    /// The fake driver allows tests to:
-    /// - Verify registration/modify/deregister contract
-    /// - Inject events deterministically
-    /// - Test permit consumption and exactly-once resume
-    /// - Test shutdown rejection
-    ///
-    /// ## Thread Safety
-    /// All operations are synchronized via a mutex. The controller
-    /// can inject events from any thread.
+extension Event {
+    /// Deterministic fake event source for testing.
     enum Fake {
-        /// Creates a fake driver with the given controller.
-        static func driver(controller: Controller) -> Driver {
-            Driver(
-                capabilities: Driver.Capabilities(
-                    maxEvents: 64,
-                    supportsEdgeTriggered: true,
-                    isCompletionBased: false
-                ),
-                create: { () throws(IO.Event.Error) -> Driver.Handle in
-                    controller.create()
+        /// Creates a fake event source controlled by the given controller.
+        ///
+        /// The returned `Kernel.Event.Source` uses the L1 Driver (with ID
+        /// generation, registry, and staleness suppression) backed by fake
+        /// closures that delegate to the Controller.
+        static func make(controller: Controller) -> Kernel.Event.Source {
+            let fakeWakeup = Kernel.Wakeup.Channel {
+                controller.state.withLock { $0.wakeupPending = true }
+            }
+
+            let driver = Kernel.Event.Driver(
+                add: { (fd: borrowing Kernel.Descriptor, id: Kernel.Event.ID, interest: Kernel.Event.Interest) throws(Kernel.Event.Driver.Error) in
+                    try controller.add(fd: fd, id: id, interest: interest)
                 },
-                register: { (handle: borrowing Driver.Handle, descriptor: Int32, interest: Interest) throws(IO.Event.Error) -> ID in
-                    try controller.register(handle, descriptor: descriptor, interest: interest)
+                modify: { (fd: borrowing Kernel.Descriptor, id: Kernel.Event.ID, old: Kernel.Event.Interest, new: Kernel.Event.Interest) throws(Kernel.Event.Driver.Error) in
+                    try controller.modify(fd: fd, id: id, old: old, new: new)
                 },
-                modify: { (handle: borrowing Driver.Handle, id: ID, interest: Interest) throws(IO.Event.Error) in
-                    try controller.modify(handle, id: id, interest: interest)
+                remove: { (fd: borrowing Kernel.Descriptor, id: Kernel.Event.ID, interest: Kernel.Event.Interest) throws(Kernel.Event.Driver.Error) in
+                    try controller.remove(fd: fd, id: id)
                 },
-                deregister: { (handle: borrowing Driver.Handle, id: ID) throws(IO.Event.Error) in
-                    try controller.deregister(handle, id: id)
+                arm: { (fd: borrowing Kernel.Descriptor, id: Kernel.Event.ID, interest: Kernel.Event.Interest) throws(Kernel.Event.Driver.Error) in
+                    try controller.arm(fd: fd, id: id, interest: interest)
                 },
-                arm: { (handle: borrowing Driver.Handle, id: ID, interest: Interest) throws(IO.Event.Error) in
-                    try controller.arm(handle, id: id, interest: interest)
+                poll: { (deadline: Clock.Continuous.Deadline?, output: inout [Kernel.Event]) throws(Kernel.Event.Driver.Error) -> Int in
+                    controller.poll(into: &output)
                 },
-                poll: { (handle: borrowing Driver.Handle, deadline: Deadline?, buffer: inout [IO.Event]) throws(IO.Event.Error) -> Int in
-                    controller.poll(handle, deadline: deadline, into: &buffer)
-                },
-                close: { (handle: consuming Driver.Handle) in
-                    controller.close(handle)
-                },
-                createWakeupChannel: { (handle: borrowing Driver.Handle) throws(IO.Event.Error) -> Wakeup.Channel in
-                    controller.createWakeupChannel(handle)
+                close: {
+                    controller.close()
                 }
             )
+
+            return Kernel.Event.Source(driver: driver, wakeup: fakeWakeup)
         }
     }
 }
 
 // MARK: - Controller
 
-extension IO.Event.Fake {
-    /// Test controller for the fake driver.
+extension Event.Fake {
+    /// Test controller for the fake event source.
     ///
-    /// Provides methods to:
-    /// - Inspect current registrations
-    /// - Inject events for specific IDs
-    /// - Trigger wakeups
-    /// - Simulate shutdown
+    /// Tracks backend operations called by the L1 Driver. The Driver manages
+    /// IDs and registry internally — the Controller just records what the
+    /// backend receives and provides events for polling.
     final class Controller: @unchecked Sendable {
-        private let state: Mutex<State>
+        let state: Mutex<State>
 
         init() {
             self.state = Mutex(State())
         }
 
-        // MARK: - State
-
-        private struct State {
-            var nextID: UInt64 = 1
-            var nextHandleID: Int32 = 1
-            var handles: [Int32: HandleState] = [:]
-            var isShutdown: Bool = false
-        }
-
-        struct HandleState {
-            var registrations: [IO.Event.ID: Registration] = [:]
-            var pendingEvents: [IO.Event] = []
+        struct State {
+            /// Backend-tracked registrations (mirrors what add/remove receive).
+            var registrations: [Kernel.Event.ID: Registration] = [:]
+            /// Events to deliver on next poll.
+            var pendingEvents: [Kernel.Event] = []
+            /// Wakeup signal pending.
             var wakeupPending: Bool = false
+            /// Simulate shutdown (reject operations).
+            var isShutdown: Bool = false
+            /// Whether close() was called.
+            var isClosed: Bool = false
         }
 
-        /// Registration entry tracking descriptor and interests.
         struct Registration: Sendable, Equatable {
-            let descriptor: Int32
-            var interest: IO.Event.Interest
+            let rawDescriptor: Int32
+            var interest: Kernel.Event.Interest
         }
 
         // MARK: - Test Inspection API
 
-        /// Returns all current registrations for a handle.
-        func registrations(for handle: borrowing IO.Event.Driver.Handle) -> [IO.Event.ID: Registration] {
-            state.withLock { $0.handles[handle.rawValue]?.registrations ?? [:] }
+        func registrations() -> [Kernel.Event.ID: Registration] {
+            state.withLock { $0.registrations }
         }
 
-        /// Returns a specific registration.
-        func registration(for id: IO.Event.ID, handle: borrowing IO.Event.Driver.Handle) -> Registration? {
-            state.withLock { $0.handles[handle.rawValue]?.registrations[id] }
+        func registration(for id: Kernel.Event.ID) -> Registration? {
+            state.withLock { $0.registrations[id] }
         }
 
-        /// Returns whether an ID is currently registered.
-        func isRegistered(_ id: IO.Event.ID, handle: borrowing IO.Event.Driver.Handle) -> Bool {
-            registration(for: id, handle: handle) != nil
+        func isRegistered(_ id: Kernel.Event.ID) -> Bool {
+            registration(for: id) != nil
         }
 
-        // MARK: - Event Injection API
-
-        /// Pushes an event to be returned by the next poll.
-        func pushEvent(_ event: IO.Event, handle: borrowing IO.Event.Driver.Handle) {
-            state.withLock { state in
-                state.handles[handle.rawValue]?.pendingEvents.append(event)
-            }
+        func pushEvent(_ event: Kernel.Event) {
+            state.withLock { $0.pendingEvents.append(event) }
         }
 
-        /// Pushes multiple events.
-        func pushEvents(_ events: [IO.Event], handle: borrowing IO.Event.Driver.Handle) {
-            state.withLock { state in
-                state.handles[handle.rawValue]?.pendingEvents.append(contentsOf: events)
-            }
+        func pushEvents(_ events: [Kernel.Event]) {
+            state.withLock { $0.pendingEvents.append(contentsOf: events) }
         }
 
-        /// Triggers a wakeup (causes poll to return immediately with 0 events).
-        func triggerWakeup(handle: borrowing IO.Event.Driver.Handle) {
-            state.withLock { state in
-                state.handles[handle.rawValue]?.wakeupPending = true
-            }
-        }
-
-        /// Simulates shutdown (all subsequent operations fail).
         func simulateShutdown() {
             state.withLock { $0.isShutdown = true }
         }
 
-        // MARK: - Driver Operations
+        // MARK: - Backend Operations (called by Driver closures)
 
-        func create() -> IO.Event.Driver.Handle {
+        func add(
+            fd: borrowing Kernel.Descriptor,
+            id: Kernel.Event.ID,
+            interest: Kernel.Event.Interest
+        ) throws(Kernel.Event.Driver.Error) {
+            let rawFd = fd._rawValue
+            var error: Kernel.Event.Driver.Error?
             state.withLock { state in
-                let id = state.nextHandleID
-                state.nextHandleID += 1
-                state.handles[id] = HandleState()
-                return IO.Event.Driver.Handle(rawValue: id)
-            }
-        }
-
-        func register(
-            _ handle: borrowing IO.Event.Driver.Handle,
-            descriptor: Int32,
-            interest: IO.Event.Interest
-        ) throws(IO.Event.Error) -> IO.Event.ID {
-            let handleID = handle.rawValue
-            var result: Result<IO.Event.ID, IO.Event.Error>!
-            state.withLock { state in
-                guard !state.isShutdown else {
-                    result = .failure(.invalidDescriptor)
-                    return
-                }
-                guard state.handles[handleID] != nil else {
-                    result = .failure(.invalidDescriptor)
-                    return
-                }
-
-                let id = IO.Event.ID(UInt(state.nextID))
-                state.nextID += 1
-                state.handles[handleID]?.registrations[id] = Registration(
-                    descriptor: descriptor,
-                    interest: interest
-                )
-                result = .success(id)
-            }
-            return try result.get()
-        }
-
-        func modify(
-            _ handle: borrowing IO.Event.Driver.Handle,
-            id: IO.Event.ID,
-            interest: IO.Event.Interest
-        ) throws(IO.Event.Error) {
-            let handleID = handle.rawValue
-            var error: IO.Event.Error?
-            state.withLock { state in
-                guard !state.isShutdown else {
-                    error = .invalidDescriptor
-                    return
-                }
-                guard state.handles[handleID]?.registrations[id] != nil else {
-                    error = .notRegistered
-                    return
-                }
-                state.handles[handleID]?.registrations[id]?.interest = interest
+                guard !state.isShutdown else { error = .invalidDescriptor; return }
+                state.registrations[id] = Registration(rawDescriptor: rawFd, interest: interest)
             }
             if let error { throw error }
         }
 
-        func deregister(
-            _ handle: borrowing IO.Event.Driver.Handle,
-            id: IO.Event.ID
-        ) throws(IO.Event.Error) {
-            let handleID = handle.rawValue
-            var error: IO.Event.Error?
+        func modify(
+            fd: borrowing Kernel.Descriptor,
+            id: Kernel.Event.ID,
+            old: Kernel.Event.Interest,
+            new: Kernel.Event.Interest
+        ) throws(Kernel.Event.Driver.Error) {
+            var error: Kernel.Event.Driver.Error?
             state.withLock { state in
-                guard !state.isShutdown else {
-                    error = .invalidDescriptor
-                    return
-                }
-                // Idempotent: succeed silently if not registered
-                _ = state.handles[handleID]?.registrations.removeValue(forKey: id)
+                guard !state.isShutdown else { error = .invalidDescriptor; return }
+                guard state.registrations[id] != nil else { error = .notRegistered; return }
+                state.registrations[id]?.interest = new
+            }
+            if let error { throw error }
+        }
+
+        func remove(
+            fd: borrowing Kernel.Descriptor,
+            id: Kernel.Event.ID
+        ) throws(Kernel.Event.Driver.Error) {
+            var error: Kernel.Event.Driver.Error?
+            state.withLock { state in
+                guard !state.isShutdown else { error = .invalidDescriptor; return }
+                _ = state.registrations.removeValue(forKey: id)
             }
             if let error { throw error }
         }
 
         func arm(
-            _ handle: borrowing IO.Event.Driver.Handle,
-            id: IO.Event.ID,
-            interest: IO.Event.Interest
-        ) throws(IO.Event.Error) {
-            let handleID = handle.rawValue
-            var error: IO.Event.Error?
+            fd: borrowing Kernel.Descriptor,
+            id: Kernel.Event.ID,
+            interest: Kernel.Event.Interest
+        ) throws(Kernel.Event.Driver.Error) {
+            var error: Kernel.Event.Driver.Error?
             state.withLock { state in
-                guard !state.isShutdown else {
-                    error = .invalidDescriptor
-                    return
-                }
-                guard state.handles[handleID]?.registrations[id] != nil else {
-                    error = .notRegistered
-                    return
-                }
-                // In the fake driver, arm is a no-op - events are injected manually
+                guard !state.isShutdown else { error = .invalidDescriptor; return }
+                guard state.registrations[id] != nil else { error = .notRegistered; return }
             }
             if let error { throw error }
         }
 
-        func poll(
-            _ handle: borrowing IO.Event.Driver.Handle,
-            deadline: IO.Event.Deadline?,
-            into buffer: inout [IO.Event]
-        ) -> Int {
-            let handleID = handle.rawValue
-            return state.withLock { state in
-                guard let handleState = state.handles[handleID] else {
+        func poll(into buffer: inout [Kernel.Event]) -> Int {
+            state.withLock { state in
+                if state.wakeupPending {
+                    state.wakeupPending = false
                     return 0
                 }
-
-                // Check wakeup
-                if state.handles[handleID]?.wakeupPending == true {
-                    state.handles[handleID]?.wakeupPending = false
-                    return 0
-                }
-
-                // Return pending events
-                let events = state.handles[handleID]?.pendingEvents ?? []
-                state.handles[handleID]?.pendingEvents = []
-
-                // Filter out events for deregistered IDs
-                let validEvents = events.filter { event in
-                    handleState.registrations[event.id] != nil
-                }
-
-                let count = min(validEvents.count, buffer.count)
-                for i in 0..<count {
-                    buffer[i] = validEvents[i]
-                }
+                let events = state.pendingEvents
+                state.pendingEvents = []
+                let count = min(events.count, buffer.count)
+                for i in 0..<count { buffer[i] = events[i] }
                 return count
             }
         }
 
-        func close(_ handle: consuming IO.Event.Driver.Handle) {
-            _ = state.withLock { state in
-                state.handles.removeValue(forKey: handle.rawValue)
-            }
-        }
-
-        func createWakeupChannel(_ handle: borrowing IO.Event.Driver.Handle) -> IO.Event.Wakeup.Channel {
-            let handleID = handle.rawValue
-            return IO.Event.Wakeup.Channel { [weak self] in
-                self?.state.withLock { state in
-                    state.handles[handleID]?.wakeupPending = true
-                }
-            }
+        func close() {
+            state.withLock { $0.isClosed = true }
         }
     }
 }

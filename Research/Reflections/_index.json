@@ -1,0 +1,292 @@
+{
+  "$schema": "https://swift-institute.org/schemas/reflections-index-v1.json",
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-04-18",
+  "title": "Reflections Index",
+  "blurb": "",
+  "scope": "swift-io (swift-foundations)",
+  "reflections": [
+    {
+      "file": "2026-04-17-kernel-completion-opcode-enum-reshape-implementation.md",
+      "displayName": "2026-04-17-kernel-completion-opcode-enum-reshape-implementation.md",
+      "date": "2026-04-17",
+      "title": "Kernel Completion Opcode Enum Reshape — Implementation Session",
+      "packages": [
+        "swift-io",
+        "swift-kernel",
+        "swift-kernel-primitives"
+      ],
+      "status": "processed",
+      "statusRaw": "pending",
+      "processedDate": "2026-04-24",
+      "triageOutcome": null,
+      "outcomeDescription": null
+    },
+    {
+      "file": "2026-04-17-io-completions-cancel-target-bug-structural-fix.md",
+      "displayName": "2026-04-17-io-completions-cancel-target-bug-structural-fix.md",
+      "date": "2026-04-17",
+      "title": "IO Completions: Cancel-Target Bug, Minimum-Delta Fix, and L1→L3 Structural Follow-up",
+      "packages": [
+        "swift-io",
+        "swift-kernel",
+        "swift-kernel-primitives"
+      ],
+      "status": "processed",
+      "statusRaw": "pending",
+      "processedDate": "2026-04-24",
+      "triageOutcome": null,
+      "outcomeDescription": null
+    },
+    {
+      "file": "2026-04-16-io-completions-test-support-and-witness-factory.md",
+      "displayName": "2026-04-16-io-completions-test-support-and-witness-factory.md",
+      "date": "2026-04-16",
+      "title": "IO Completions Test Support: From Fake to Witness Factory",
+      "packages": [
+        "swift-io",
+        "swift-executors",
+        "swift-institute"
+      ],
+      "status": "processed",
+      "statusRaw": "pending",
+      "processedDate": "2026-04-24",
+      "triageOutcome": null,
+      "outcomeDescription": null
+    },
+    {
+      "file": "2026-04-16-io-completions-full-delegation-and-simplification.md",
+      "displayName": "2026-04-16-io-completions-full-delegation-and-simplification.md",
+      "date": "2026-04-16",
+      "title": "IO Completions: Full Delegation and Simplification (28 → 8 source files)",
+      "packages": [
+        "swift-io",
+        "swift-executors",
+        "swift-kernel",
+        "swift-sockets"
+      ],
+      "status": "processed",
+      "statusRaw": "pending",
+      "processedDate": "2026-04-24",
+      "triageOutcome": null,
+      "outcomeDescription": null
+    },
+    {
+      "file": "2026-04-16-io-events-finalization-and-completions-delegation-diagnostic.md",
+      "displayName": "2026-04-16-io-events-finalization-and-completions-delegation-diagnostic.md",
+      "date": "2026-04-16",
+      "title": "IO.Events Finalization and IO.Completions Delegation Diagnostic",
+      "packages": [
+        "swift-io",
+        "swift-sockets",
+        "swift-kernel"
+      ],
+      "status": "processed",
+      "statusRaw": "pending",
+      "processedDate": "2026-04-24",
+      "triageOutcome": null,
+      "outcomeDescription": null
+    },
+    {
+      "file": "2026-04-03-selector-direct-continuation.md",
+      "displayName": "2026-04-03-selector-direct-continuation.md",
+      "date": "2026-04-03",
+      "title": "Direct Continuation Passing Simplifies the CQ Waiter Pattern",
+      "packages": [
+        "swift-io"
+      ],
+      "status": "processed",
+      "statusRaw": "processed",
+      "processedDate": null,
+      "triageOutcome": null,
+      "outcomeDescription": null
+    },
+    {
+      "file": "2026-04-07-actor-state-inline-fallback-visibility.md",
+      "displayName": "2026-04-07-actor-state-inline-fallback-visibility.md",
+      "date": "2026-04-07",
+      "title": "Actor state via inline-fallback: release-mode visibility bug, fresh-eyes delegation, handoff proliferation",
+      "packages": [
+        "swift-io",
+        "swift-file-system"
+      ],
+      "status": "processed",
+      "statusRaw": "processed",
+      "processedDate": null,
+      "triageOutcome": null,
+      "outcomeDescription": null
+    },
+    {
+      "file": "2026-04-08-actor-state-fix-deferred-structural-vs-runtime.md",
+      "displayName": "2026-04-08-actor-state-fix-deferred-structural-vs-runtime.md",
+      "date": "2026-04-08",
+      "title": "Actor-state fix deferred: when the proposal is the right answer to the wrong question",
+      "packages": [
+        "swift-io"
+      ],
+      "status": "processed",
+      "statusRaw": "processed",
+      "processedDate": null,
+      "triageOutcome": null,
+      "outcomeDescription": null
+    },
+    {
+      "file": "2026-04-08-parent-side-deletion-vs-addition.md",
+      "displayName": "2026-04-08-parent-side-deletion-vs-addition.md",
+      "date": "2026-04-08",
+      "title": "Parent-side: Deletion vs Addition — Structural Fix Misalignment",
+      "packages": [
+        "swift-io"
+      ],
+      "status": "processed",
+      "statusRaw": "processed",
+      "processedDate": null,
+      "triageOutcome": null,
+      "outcomeDescription": null
+    },
+    {
+      "file": "2026-04-08-architectural-simplification-and-api-consolidation.md",
+      "displayName": "2026-04-08-architectural-simplification-and-api-consolidation.md",
+      "date": "2026-04-08",
+      "title": "Architectural Simplification and API Consolidation",
+      "packages": [
+        "swift-io",
+        "swift-async-primitives",
+        "swift-algebra-primitives"
+      ],
+      "status": "processed",
+      "statusRaw": "processed",
+      "processedDate": null,
+      "triageOutcome": null,
+      "outcomeDescription": null
+    },
+    {
+      "file": "2026-04-09-io-uring-no-separate-loop.md",
+      "displayName": "2026-04-09-io-uring-no-separate-loop.md",
+      "date": "2026-04-09",
+      "title": "io_uring Does Not Need Its Own Event Loop",
+      "packages": [
+        "swift-io",
+        "swift-kernel-primitives",
+        "swift-kernel"
+      ],
+      "status": "processed",
+      "statusRaw": "processed",
+      "processedDate": null,
+      "triageOutcome": null,
+      "outcomeDescription": null
+    },
+    {
+      "file": "2026-04-13-scope-mutex-removal-deinit-immutability.md",
+      "displayName": "2026-04-13-scope-mutex-removal-deinit-immutability.md",
+      "date": "2026-04-13",
+      "title": "Scope Mutex Removal: deinit Immutability and Workaround vs Fix Distinction",
+      "packages": [
+        "swift-io"
+      ],
+      "status": "processed",
+      "statusRaw": "processed",
+      "processedDate": null,
+      "triageOutcome": null,
+      "outcomeDescription": null
+    },
+    {
+      "file": "2026-04-14-io-witness-shape-b-emergence.md",
+      "displayName": "2026-04-14-io-witness-shape-b-emergence.md",
+      "date": "2026-04-14",
+      "title": "IO Witness: Shape B Emergence via Iterative Design Collapse",
+      "packages": [
+        "swift-io",
+        "swift-witnesses",
+        "swift-foundations"
+      ],
+      "status": "processed",
+      "statusRaw": "processed",
+      "processedDate": null,
+      "triageOutcome": null,
+      "outcomeDescription": null
+    },
+    {
+      "file": "2026-04-14-io-design-review-cycle.md",
+      "displayName": "2026-04-14-io-design-review-cycle.md",
+      "date": "2026-04-14",
+      "title": "IO Design Review Cycle — Elided Elephant, Measurement Flip, Framing Layering",
+      "packages": [
+        "swift-io",
+        "swift-witnesses",
+        "swift-sockets"
+      ],
+      "status": "processed",
+      "statusRaw": "processed",
+      "processedDate": null,
+      "triageOutcome": null,
+      "outcomeDescription": null
+    },
+    {
+      "file": "2026-04-14-strict-mission-thread-layer-refactor.md",
+      "displayName": "2026-04-14-strict-mission-thread-layer-refactor.md",
+      "date": "2026-04-14",
+      "title": "Strict-mission thread-layer refactor: swift-threads extraction + per-L2 Kernel.Thread.ID",
+      "packages": [
+        "swift-io",
+        "swift-executors",
+        "swift-threads",
+        "swift-kernel",
+        "swift-darwin-standard",
+        "swift-linux-standard",
+        "swift-windows-standard"
+      ],
+      "status": "processed",
+      "statusRaw": "processed",
+      "processedDate": null,
+      "triageOutcome": null,
+      "outcomeDescription": null
+    },
+    {
+      "file": "2026-04-15-completion-loop-proactor-reactor-boundary.md",
+      "displayName": "2026-04-15-completion-loop-proactor-reactor-boundary.md",
+      "date": "2026-04-15",
+      "title": "Completion.Loop: Proactor is a Real Architectural Boundary, Not an Abstraction Seam",
+      "packages": [
+        "swift-io",
+        "swift-executors",
+        "swift-executor-primitives"
+      ],
+      "status": "processed",
+      "statusRaw": "processed",
+      "processedDate": null,
+      "triageOutcome": null,
+      "outcomeDescription": null
+    },
+    {
+      "file": "2026-04-15-polling-tick-throws-thunk-over-result.md",
+      "displayName": "2026-04-15-polling-tick-throws-thunk-over-result.md",
+      "date": "2026-04-15",
+      "title": "Polling Tick: throws(E) Thunk Over Result — Language Semantics as Ecosystem Default",
+      "packages": [
+        "swift-executors",
+        "swift-io"
+      ],
+      "status": "processed",
+      "statusRaw": "processed",
+      "processedDate": null,
+      "triageOutcome": null,
+      "outcomeDescription": null
+    },
+    {
+      "file": "2026-04-15-polling-tick-isolation-checkisolated-landing.md",
+      "displayName": "2026-04-15-polling-tick-isolation-checkisolated-landing.md",
+      "date": "2026-04-15",
+      "title": "Polling Tick Isolation: checkIsolated Is The Designed Bridge, Not A Hack",
+      "packages": [
+        "swift-executors",
+        "swift-io"
+      ],
+      "status": "processed",
+      "statusRaw": "processed",
+      "processedDate": null,
+      "triageOutcome": null,
+      "outcomeDescription": null
+    }
+  ]
+}

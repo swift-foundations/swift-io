@@ -1,22 +1,23 @@
 //
-//  IO.Event.Primitives.Tests.swift
+//  Event.Primitives.Tests.swift
 //  swift-io
 //
 //  Created by Coen ten Thije Boonkkamp on 28/12/2025.
 //
 
+import IO_Test_Support
 import IO_Events
 import Kernel
 import Testing
 
-@Suite("IO.Event Primitives")
-struct NonBlockingPrimitivesTests {
+@Suite(.timeLimit(.minutes(1)))
+struct `Event Primitives` {
 
-    @Test("Interest OptionSet operations")
-    func interestOptionSet() {
-        let read: IO.Event.Interest = .read
-        let write: IO.Event.Interest = .write
-        let both: IO.Event.Interest = [.read, .write]
+    @Test
+    func `Interest OptionSet operations`() {
+        let read: Event.Interest = .read
+        let write: Event.Interest = .write
+        let both: Event.Interest = [.read, .write]
 
         #expect(both.contains(.read))
         #expect(both.contains(.write))
@@ -24,10 +25,10 @@ struct NonBlockingPrimitivesTests {
         #expect(read.union(write) == both)
     }
 
-    @Test("Event creation and properties")
-    func eventCreation() {
-        let id = IO.Event.ID(42)
-        let event = IO.Event(
+    @Test
+    func `Event creation and properties`() {
+        let id = Event.ID(42)
+        let event = Kernel.Event(
             id: id,
             interest: [.read, .write],
             flags: [.hangup]
@@ -40,38 +41,38 @@ struct NonBlockingPrimitivesTests {
         #expect(!event.flags.contains(.error))
     }
 
-    @Test("Event.Flags combinations")
-    func eventFlags() {
-        let flags: IO.Event.Flags = [.error, .hangup]
+    @Test
+    func `Event.Options combinations`() {
+        let flags: Event.Options = [.error, .hangup]
 
         #expect(flags.contains(.error))
         #expect(flags.contains(.hangup))
         #expect(!flags.contains(.readHangup))
     }
 
-    @Test("ID equality and hashing")
-    func idEquality() {
-        let id1 = IO.Event.ID(100)
-        let id2 = IO.Event.ID(100)
-        let id3 = IO.Event.ID(200)
+    @Test
+    func `ID equality and hashing`() {
+        let id1 = Event.ID(100)
+        let id2 = Event.ID(100)
+        let id3 = Event.ID(200)
 
         #expect(id1 == id2)
         #expect(id1 != id3)
         #expect(id1.hashValue == id2.hashValue)
     }
 
-    @Test("Token creation and ID access")
-    func tokenCreation() {
-        let id = IO.Event.ID(42)
+    @Test
+    func `Token creation and ID access`() {
+        let _ = Event.ID(42)
         // Tokens are created internally, but we can test the type exists
         // and the ID is accessible via consuming operations
     }
 
-    @Test("Error descriptions")
-    func errorDescriptions() {
-        let platformError = IO.Event.Error.platform(.posix(22))
-        let invalidDesc = IO.Event.Error.invalidDescriptor
-        let writeClosed = IO.Event.Error.writeClosed
+    @Test
+    func `Error descriptions`() {
+        let platformError = Event.Error.platform(.posix(22))
+        let invalidDesc = Event.Error.invalidDescriptor
+        let writeClosed = Event.Error.writeClosed
 
         #expect(platformError.description.contains("Platform"))
         #expect(invalidDesc.description.contains("Invalid"))

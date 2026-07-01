@@ -1,0 +1,164 @@
+{
+  "$schema": "https://swift-institute.org/schemas/research-index-v1.json",
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-04-18",
+  "title": "Research Index — swift-io",
+  "blurb": "",
+  "scope": "swift-io (swift-foundations)",
+  "documents": [
+    {
+      "file": "io-uring-integration-architecture.md",
+      "displayName": "io-uring-integration-architecture",
+      "topic": "io_uring integration: single-thread via eventfd+epoll, no separate poll thread, platform stack placement",
+      "date": "2026-04-08",
+      "status": "IN_PROGRESS",
+      "statusDetail": null,
+      "statusRaw": "IN_PROGRESS",
+      "tier": null,
+      "scope": null
+    },
+    {
+      "file": "perfect-api.md",
+      "displayName": "perfect-api",
+      "topic": "Canonical API spec: IO.run as universal entry point, progressive disclosure, Tier 0/1+ split, type inventory, consumer patterns",
+      "date": "2026-04-08",
+      "status": "RECOMMENDATION",
+      "statusDetail": null,
+      "statusRaw": "RECOMMENDATION",
+      "tier": 0,
+      "scope": null
+    },
+    {
+      "file": "../Audits/audit.md",
+      "displayName": "audit",
+      "topic": "Systematic code audit against skill requirements",
+      "date": "2026-04-16",
+      "status": "ACTIVE",
+      "statusDetail": null,
+      "statusRaw": "ACTIVE",
+      "tier": null,
+      "scope": null
+    },
+    {
+      "file": "actor-state-visibility-structural-fix.md",
+      "displayName": "actor-state-visibility-structural-fix",
+      "topic": "Release-mode actor state visibility bug: structural fix proposals, comparison matrix",
+      "date": "2026-04-07",
+      "status": "DEFERRED",
+      "statusDetail": null,
+      "statusRaw": "DEFERRED",
+      "tier": null,
+      "scope": null
+    },
+    {
+      "file": "architecture-refactor.md",
+      "displayName": "architecture-refactor",
+      "topic": "Platform stack alignment: event/completion policy to platform packages",
+      "date": "2026-03-25",
+      "status": "RECOMMENDATION",
+      "statusDetail": null,
+      "statusRaw": "RECOMMENDATION",
+      "tier": null,
+      "scope": null
+    },
+    {
+      "file": "channel-full-duplex-split.md",
+      "displayName": "channel-full-duplex-split",
+      "topic": "Channel full-duplex: deadlock analysis, split() API, shared coordinator",
+      "date": "2026-03-27",
+      "status": "RECOMMENDATION",
+      "statusDetail": null,
+      "statusRaw": "RECOMMENDATION",
+      "tier": null,
+      "scope": null
+    },
+    {
+      "file": "split-cancellation-propagation.md",
+      "displayName": "split-cancellation-propagation",
+      "topic": "Split cancellation: withTaskCancellationHandler race in receive()",
+      "date": "2026-03-30",
+      "status": "RECOMMENDATION",
+      "statusDetail": null,
+      "statusRaw": "RECOMMENDATION",
+      "tier": null,
+      "scope": null
+    },
+    {
+      "file": "completion-queue-ownership-redesign.md",
+      "displayName": "completion-queue-ownership-redesign",
+      "topic": "Completion queue ownership model refinement",
+      "date": "2026-03-27",
+      "status": "RECOMMENDATION",
+      "statusDetail": null,
+      "statusRaw": "RECOMMENDATION",
+      "tier": null,
+      "scope": null
+    },
+    {
+      "file": "io-event-channel-hardening.md",
+      "displayName": "io-event-channel-hardening",
+      "topic": "Channel deinit, wakeup error handling, poll loop resilience",
+      "date": "2026-03-24",
+      "status": "READY",
+      "statusDetail": null,
+      "statusRaw": "READY",
+      "tier": null,
+      "scope": null
+    },
+    {
+      "file": "io-event-selector-timed-hang.md",
+      "displayName": "io-event-selector-timed-hang",
+      "topic": "Selector hang under repeated .timed() iterations",
+      "date": "2026-03-24",
+      "status": "IN_PROGRESS",
+      "statusDetail": null,
+      "statusRaw": "IN_PROGRESS",
+      "tier": null,
+      "scope": null
+    },
+    {
+      "file": "executor-lifecycle-literature-study.md",
+      "displayName": "executor-lifecycle-literature-study",
+      "topic": "How Tokio, SwiftNIO, libuv, io_uring, Go handle thread lifecycle",
+      "date": "2026-04-01",
+      "status": "REFERENCE",
+      "statusDetail": null,
+      "statusRaw": "REFERENCE",
+      "tier": null,
+      "scope": null
+    },
+    {
+      "file": "service-lifecycle-evaluation.md",
+      "displayName": "service-lifecycle-evaluation",
+      "topic": "swift-service-lifecycle evaluation",
+      "date": "2026-03-24",
+      "status": "COMPLETE",
+      "statusDetail": null,
+      "statusRaw": "COMPLETE",
+      "tier": null,
+      "scope": null
+    },
+    {
+      "file": "io-bench-process-hang.md",
+      "displayName": "io-bench-process-hang",
+      "topic": "io-bench hang after completion: root cause and fix",
+      "date": "2026-03-24",
+      "status": "RECOMMENDATION",
+      "statusDetail": null,
+      "statusRaw": "RECOMMENDATION",
+      "tier": null,
+      "scope": null
+    },
+    {
+      "file": "revalidation-temporary-pointers-shutdown-view.md",
+      "displayName": "revalidation-temporary-pointers-shutdown-view",
+      "topic": "TemporaryPointers warning in ~Escapable shutdown views",
+      "date": "2026-04-06",
+      "status": "COMPLETE",
+      "statusDetail": null,
+      "statusRaw": "COMPLETE",
+      "tier": null,
+      "scope": null
+    }
+  ]
+}

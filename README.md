@@ -211,7 +211,7 @@ IO.Lifecycle.Error<E>
         ├── .leaf(Leaf)    // Your operation's error type
         ├── .handle(...)   // Handle errors (.notFound, .scopeMismatch)
         ├── .executor(...) // Executor errors (.waiterQueueFull)
-        └── .lane(...)     // Lane errors (.queueFull, .deadlineExceeded)
+        └── .lane(...)     // Lane errors (.queue(.full), .overloaded)
 ```
 
 ## Architecture
@@ -273,7 +273,7 @@ completions[ticket] = result  // store under lock
 let result = completions.removeValue(forKey: ticket)  // lookup under lock
 
 // swift-io: Direct pointer, zero lookup, no shared dictionary
-job.context.tryComplete(with: result)  // 83ns, atomic CAS
+do { try job.context.complete(with: result) } catch {}  // 83ns, atomic CAS
 ```
 
 ### Guarantees
