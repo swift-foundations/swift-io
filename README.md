@@ -1,6 +1,6 @@
 # swift-io
 
-![Development Status](https://img.shields.io/badge/status-active--development-blue.svg)
+![CI](https://github.com/swift-foundations/swift-io/actions/workflows/ci.yml/badge.svg) ![Development Status](https://img.shields.io/badge/status-active--development-blue.svg)
 
 A high-performance async I/O executor for Swift. Isolates blocking syscalls from Swift's cooperative thread pool with dedicated worker threads, bounded queues, and deterministic shutdown semantics.
 
@@ -84,7 +84,7 @@ Swift's cooperative thread pool is designed for quick, non-blocking work. When y
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/swift-foundations/swift-io.git", from: "0.1.0")
+    .package(url: "https://github.com/swift-foundations/swift-io.git", from: "0.2.0")
 ]
 ```
 
@@ -98,7 +98,7 @@ dependencies: [
 ```
 
 **Requirements:**
-- Swift 6.2+ (swift-tools-version: 6.2)
+- Swift 6.3.1+ (swift-tools-version: 6.3.1)
 - Apple platforms: macOS 26 / iOS 26 / tvOS 26 / watchOS 26
 - Linux and Windows: See [Platform Support](#platform-support)
 
@@ -318,19 +318,25 @@ let pool = IO.Executor.Pool<FileHandle>(
 
 ## Platform Support
 
-CI covers macOS, Linux, and Windows on every push to main.
+CI targets macOS, Linux, and Windows; see the [workflow runs](https://github.com/swift-foundations/swift-io/actions/workflows/ci.yml) for current status.
 
-| Platform | CI | Status |
-|----------|-----|--------|
-| macOS | ✅ Swift 6.2, debug | Full support |
-| Linux (Ubuntu) | ✅ Swift 6.2, release | Full support |
-| Windows | ✅ Swift 6.2 | Full support |
+| Platform | CI target | Notes |
+|----------|-----------|-------|
+| macOS | Swift 6.3.1, debug | Targeted in the CI matrix |
+| Linux (Ubuntu) | Swift 6.3.1, release | Targeted in the CI matrix |
+| Windows | Swift 6.3.1 | Targeted in the CI matrix |
 | iOS/tvOS/watchOS | — | Supported (same codebase as macOS) |
 
 ## Related Packages
 
 - [swift-file-system](https://github.com/swift-foundations/swift-file-system) - File system operations built on swift-io
 - [swift-time-standard](https://github.com/swift-standards/swift-time-standard) - Time types for deadlines
+
+## Status & maintainer
+
+This package is public alpha (pre-1.0): interfaces are stabilizing and APIs may change between minor versions.
+
+Maintained by [Coen ten Thije Boonkkamp](https://github.com/coenttb) — available for Swift infrastructure and document-systems consulting: coen@coenttb.com.
 
 ## License
 
