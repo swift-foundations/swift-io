@@ -5,6 +5,11 @@
 //  Per-interest sender lists with broadcast-and-drain primitives.
 //
 
+// Windows: the event reactor is built on Kernel.Event.Source (epoll/kqueue)
+// and Kernel.Thread.Executor.Polling — POSIX-only surfaces (swift-executors
+// gates Polling !os(Windows)). Gated whole-file to match the IO Completions
+// posture; the Windows leg uses the blocking path per IO+File.System+Default.
+#if !os(Windows)
 import Async
 
 extension Event.Actor.Registration {
@@ -80,3 +85,5 @@ extension Event.Actor.Registration.Senders {
         for sender in priority { sender.close() }
     }
 }
+
+#endif

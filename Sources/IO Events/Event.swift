@@ -3,6 +3,11 @@
 //  swift-io
 //
 
+// Windows: the event reactor is built on Kernel.Event.Source (epoll/kqueue)
+// and Kernel.Thread.Executor.Polling — POSIX-only surfaces (swift-executors
+// gates Polling !os(Windows)). Gated whole-file to match the IO Completions
+// posture; the Windows leg uses the blocking path per IO+File.System+Default.
+#if !os(Windows)
 @_exported public import Kernel
 
 /// Top-level namespace for the swift-io events-strategy runtime
@@ -23,3 +28,5 @@
 /// own module and handle the domain-specific error mapping from
 /// ``Event/Failure``.
 public typealias Event = Kernel.Event
+
+#endif

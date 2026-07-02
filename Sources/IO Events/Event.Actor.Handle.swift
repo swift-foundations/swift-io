@@ -19,6 +19,11 @@
 //
 
 
+// Windows: the event reactor is built on Kernel.Event.Source (epoll/kqueue)
+// and Kernel.Thread.Executor.Polling — POSIX-only surfaces (swift-executors
+// gates Polling !os(Windows)). Gated whole-file to match the IO Completions
+// posture; the Windows leg uses the blocking path per IO+File.System+Default.
+#if !os(Windows)
 extension Event.Actor {
 
     /// Weak cell the tick closure uses to reach the actor without
@@ -38,3 +43,5 @@ extension Event.Actor {
         init() {}
     }
 }
+
+#endif
