@@ -59,7 +59,8 @@ let package = Package(
                 .product(name: "Witness Primitives", package: "swift-witness-primitives"),
                 .product(name: "Witnesses", package: "swift-witnesses"),
                 .product(name: "Either Primitives", package: "swift-either-primitives"),
-            ]
+            ],
+            exclude: ["README.md"]
         ),
 
         // MARK: - Completions (strategy-only, domain-agnostic proactor)
@@ -84,7 +85,8 @@ let package = Package(
                 .product(name: "Memory Heap Primitives", package: "swift-memory-heap-primitives"),
                 .product(name: "Memory Allocator Primitive", package: "swift-memory-allocation-primitives"),
                 .product(name: "Synchronizer Blocking", package: "swift-synchronizers"),
-            ]
+            ],
+            exclude: ["README.md"]
         ),
 
         // MARK: - Umbrella (strategies + host-adaptive selector)
