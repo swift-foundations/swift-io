@@ -84,7 +84,7 @@ Swift's cooperative thread pool is designed for quick, non-blocking work. When y
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/coenttb/swift-io.git", from: "0.1.0")
+    .package(url: "https://github.com/swift-foundations/swift-io.git", from: "0.1.0")
 ]
 ```
 
@@ -146,7 +146,7 @@ await pool.shutdown()
 
 ### Domain Facade Pattern
 
-For production use, wrap the pool in a domain-specific API (see [swift-file-system](https://github.com/coenttb/swift-file-system)):
+For production use, wrap the pool in a domain-specific API (see [swift-file-system](https://github.com/swift-foundations/swift-file-system)):
 
 ```swift
 public actor FileSystem {
@@ -329,7 +329,7 @@ CI covers macOS, Linux, and Windows on every push to main.
 
 ## Related Packages
 
-- [swift-file-system](https://github.com/coenttb/swift-file-system) - File system operations built on swift-io
+- [swift-file-system](https://github.com/swift-foundations/swift-file-system) - File system operations built on swift-io
 - [swift-time-standard](https://github.com/swift-standards/swift-time-standard) - Time types for deadlines
 
 ## License
