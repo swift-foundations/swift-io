@@ -10,14 +10,13 @@
 //  See Research/io-blocking-executor-binding.md v4.0.
 //
 
-import Testing
+import Executors
+import IO_Test_Support
 import Kernel
 import Memory_Primitives
 import Span_Raw_Primitives
-import Executors
 import Synchronization
-
-import IO_Test_Support
+import Testing
 
 extension Basic {
     enum BindingTest {
@@ -61,11 +60,11 @@ extension Basic.BindingTest.MandatoryBinding {
     @Test
     func `many concurrent IOs with Task.sleep all progress`() async throws {
         let count = 16
-        await withTaskGroup(of: Void.self) { group in
+        try await withThrowingTaskGroup(of: Void.self) { group in
             for _ in 0..<count {
                 group.addTask {
                     let io = IO.blocking()
-                    let pipe = try! Kernel.Pipe.pipe()
+                    let pipe = try Kernel.Pipe.pipe()
 
                     let ptr = unsafe UnsafeMutableRawBufferPointer.allocate(byteCount: 1, alignment: 1)
                     defer { ptr.deallocate() }
@@ -73,12 +72,12 @@ extension Basic.BindingTest.MandatoryBinding {
                     let writeBuf: Span.Raw = unsafe .init(UnsafeRawBufferPointer(ptr))
                     let readBuf: Span.Raw.Mutable = unsafe .init(ptr)
 
-                    _ = try! await io.write(to: pipe.write, from: writeBuf)
-                    try! await Task.sleep(for: .milliseconds(1))
-                    _ = try! await io.read(from: pipe.read, into: readBuf)
+                    _ = try await io.write(to: pipe.write, from: writeBuf)
+                    try await Task.sleep(for: .milliseconds(1))
+                    _ = try await io.read(from: pipe.read, into: readBuf)
                 }
             }
-            await group.waitForAll()
+            try await group.waitForAll()
         }
     }
 }
@@ -121,14 +120,14 @@ private func makeProbedIO(
         close: { fd in
             await actor.close(consume fd)
         },
-        ready: { _, _ throws(Basic.Error) -> Void in
+        ready: { _, _ throws(Basic.Error) in
             // Blocking strategy: no-op (same semantics as the
             // production IO+Blocking factory).
         }
     )
     let runner = unsafe IO<Basic.Capabilities>.Runner(
         executor: { unsafe actor.unownedExecutor },
-        shutdown: { }
+        shutdown: {}
     )
     return IO(capabilities: capabilities, runner: runner)
 }

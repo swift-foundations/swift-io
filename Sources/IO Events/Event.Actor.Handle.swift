@@ -18,30 +18,29 @@
 //  `self.polling` has been assigned.
 //
 
-
 // Windows: the event reactor is built on Kernel.Event.Source (epoll/kqueue)
 // and Kernel.Thread.Executor.Polling — POSIX-only surfaces (swift-executors
 // gates Polling !os(Windows)). Gated whole-file to match the IO Completions
 // posture; the Windows leg uses the blocking path per IO+File.System+Default.
 #if !os(Windows)
-extension Event.Actor {
+    extension Event.Actor {
 
-    /// Weak cell the tick closure uses to reach the actor without
-    /// participating in the retain cycle.
-    ///
-    /// ## Safety Invariant
-    ///
-    /// `@unsafe @unchecked Sendable` (Category A per MEM-SAFE-024):
-    /// synchronized by the runtime's atomic weak-reference machinery.
-    /// `weak var` cannot be `let` (the runtime must zero it on
-    /// deallocation). The only write happens at the tail of
-    /// `Actor.init`, sequenced-before the Polling thread can observe
-    /// any tick; subsequent reads use Swift's atomic weak-ref.
-    internal final class Handle: @unsafe @unchecked Sendable {
-        weak var actor: Event.Actor?
+        /// Weak cell the tick closure uses to reach the actor without
+        /// participating in the retain cycle.
+        ///
+        /// ## Safety Invariant
+        ///
+        /// `@unsafe @unchecked Sendable` (Category A per MEM-SAFE-024):
+        /// synchronized by the runtime's atomic weak-reference machinery.
+        /// `weak var` cannot be `let` (the runtime must zero it on
+        /// deallocation). The only write happens at the tail of
+        /// `Actor.init`, sequenced-before the Polling thread can observe
+        /// any tick; subsequent reads use Swift's atomic weak-ref.
+        internal final class Handle: @unsafe @unchecked Sendable {
+            weak var actor: Event.Actor?
 
-        init() {}
+            init() {}
+        }
     }
-}
 
 #endif

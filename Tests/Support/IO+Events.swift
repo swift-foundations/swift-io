@@ -43,7 +43,7 @@ extension IO where Capabilities == Basic.Capabilities {
             close: { fd in
                 await actor.close(consume fd)
             },
-            ready: { fd, interest throws(Basic.Error) -> Void in
+            ready: { fd, interest throws(Basic.Error) in
                 do throws(Event.Failure) {
                     try await actor.ready(from: fd, interest: interest)
                 } catch {
@@ -51,7 +51,7 @@ extension IO where Capabilities == Basic.Capabilities {
                 }
             }
         )
-        let runner = unsafe IO.Runner(
+        let runner = unsafe Self.Runner(
             executor: { actor.unownedExecutor },
             shutdown: {
                 // The actor owns its Polling executor and shuts it down

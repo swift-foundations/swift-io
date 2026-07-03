@@ -7,11 +7,11 @@
 //  properties that must hold regardless of strategy.
 //
 
-import Testing
 import IO_Test_Support
 @_spi(Syscall) import Kernel
 import Memory_Primitives
 import Span_Raw_Primitives
+import Testing
 
 @Suite("IO.default — smoke tests")
 struct IODefaultTests {
@@ -40,7 +40,8 @@ struct IODefaultTests {
 
         let payload: [UInt8] = [0xDE, 0xAD, 0xBE, 0xEF]
         let writePtr = unsafe UnsafeMutableRawBufferPointer.allocate(
-            byteCount: payload.count, alignment: 1
+            byteCount: payload.count,
+            alignment: 1
         )
         defer { unsafe writePtr.deallocate() }
         for (i, byte) in payload.enumerated() { unsafe writePtr[i] = byte }
@@ -51,7 +52,8 @@ struct IODefaultTests {
         )
 
         let readPtr = unsafe UnsafeMutableRawBufferPointer.allocate(
-            byteCount: 1024, alignment: 1
+            byteCount: 1024,
+            alignment: 1
         )
         defer { unsafe readPtr.deallocate() }
 

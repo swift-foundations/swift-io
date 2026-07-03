@@ -8,12 +8,12 @@
 // gates Polling !os(Windows)). Gated whole-file to match the IO Completions
 // posture; the Windows leg uses the blocking path per IO+File.System+Default.
 #if !os(Windows)
-extension Event.Actor {
+    extension Event.Actor {
 
-    enum State: Sendable {
-        case running
-        case shuttingDown
+        enum State: Sendable {
+            case running
+            case shuttingDown
+        }
     }
-}
 
 #endif

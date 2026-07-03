@@ -6,8 +6,6 @@
 import IO_Test_Support
 import Testing
 
-import IO_Test_Support
-
 extension Basic {
     @Suite(.timeLimit(.minutes(1)))
     struct Test {

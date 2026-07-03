@@ -18,27 +18,26 @@
 //  `init` after `self.completion` has been assigned. See [IMPL-083].
 //
 
-
 #if !os(Windows)
 
-extension Completion.Actor {
+    extension Completion.Actor {
 
-    /// Weak cell the tick closure uses to reach the actor without
-    /// participating in the retain cycle.
-    ///
-    /// ## Safety Invariant
-    ///
-    /// `@unsafe @unchecked Sendable` (Category A per MEM-SAFE-024):
-    /// synchronized by the runtime's atomic weak-reference machinery.
-    /// `weak var` cannot be `let` (the runtime must zero it on
-    /// deallocation). The only write happens at the tail of `Actor.init`,
-    /// sequenced-before the Completion executor's thread can observe any
-    /// tick; subsequent reads use Swift's atomic weak-ref.
-    internal final class Handle: @unsafe @unchecked Sendable {
-        weak var actor: Completion.Actor?
+        /// Weak cell the tick closure uses to reach the actor without
+        /// participating in the retain cycle.
+        ///
+        /// ## Safety Invariant
+        ///
+        /// `@unsafe @unchecked Sendable` (Category A per MEM-SAFE-024):
+        /// synchronized by the runtime's atomic weak-reference machinery.
+        /// `weak var` cannot be `let` (the runtime must zero it on
+        /// deallocation). The only write happens at the tail of `Actor.init`,
+        /// sequenced-before the Completion executor's thread can observe any
+        /// tick; subsequent reads use Swift's atomic weak-ref.
+        internal final class Handle: @unsafe @unchecked Sendable {
+            weak var actor: Completion.Actor?
 
-        init() {}
+            init() {}
+        }
     }
-}
 
 #endif

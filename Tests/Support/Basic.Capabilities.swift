@@ -29,17 +29,19 @@ extension Basic {
 
         /// Read bytes from a descriptor into a mutable buffer. Returns
         /// bytes read, or 0 at EOF.
-        public let read: @Sendable (
-            borrowing Kernel.Descriptor,
-            Span.Raw.Mutable
-        ) async throws(Basic.Error) -> Int
+        public let read:
+            @Sendable (
+                borrowing Kernel.Descriptor,
+                Span.Raw.Mutable
+            ) async throws(Basic.Error) -> Int
 
         /// Write bytes from a buffer to a descriptor. Returns bytes
         /// written.
-        public let write: @Sendable (
-            borrowing Kernel.Descriptor,
-            Span.Raw
-        ) async throws(Basic.Error) -> Int
+        public let write:
+            @Sendable (
+                borrowing Kernel.Descriptor,
+                Span.Raw
+            ) async throws(Basic.Error) -> Int
 
         /// Close a descriptor. Ownership is consumed.
         public let close: @Sendable (consuming Kernel.Descriptor) async -> Void
@@ -63,26 +65,30 @@ extension Basic {
         ///   readiness is signalled.
         /// - **Completions (proactor)** — submit `IORING_OP_POLL_ADD`
         ///   (or platform equivalent) and await the CQE.
-        public let ready: @Sendable (
-            borrowing Kernel.Descriptor,
-            Kernel.Event.Interest
-        ) async throws(Basic.Error) -> Void
-
-        /// Creates a capability set from its four operation closures.
-        public init(
-            read: @Sendable @escaping (
-                borrowing Kernel.Descriptor,
-                Span.Raw.Mutable
-            ) async throws(Basic.Error) -> Int,
-            write: @Sendable @escaping (
-                borrowing Kernel.Descriptor,
-                Span.Raw
-            ) async throws(Basic.Error) -> Int,
-            close: @Sendable @escaping (consuming Kernel.Descriptor) async -> Void,
-            ready: @Sendable @escaping (
+        public let ready:
+            @Sendable (
                 borrowing Kernel.Descriptor,
                 Kernel.Event.Interest
             ) async throws(Basic.Error) -> Void
+
+        /// Creates a capability set from its four operation closures.
+        public init(
+            read:
+                @Sendable @escaping (
+                    borrowing Kernel.Descriptor,
+                    Span.Raw.Mutable
+                ) async throws(Basic.Error) -> Int,
+            write:
+                @Sendable @escaping (
+                    borrowing Kernel.Descriptor,
+                    Span.Raw
+                ) async throws(Basic.Error) -> Int,
+            close: @Sendable @escaping (consuming Kernel.Descriptor) async -> Void,
+            ready:
+                @Sendable @escaping (
+                    borrowing Kernel.Descriptor,
+                    Kernel.Event.Interest
+                ) async throws(Basic.Error) -> Void
         ) {
             self.read = read
             self.write = write

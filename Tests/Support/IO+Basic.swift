@@ -42,7 +42,7 @@ extension IO where Capabilities == Basic.Capabilities {
     public func ready(
         from fd: borrowing Kernel.Descriptor,
         interest: Kernel.Event.Interest
-    ) async throws(Basic.Error) -> Void {
+    ) async throws(Basic.Error) {
         try await capabilities.ready(fd, interest)
     }
 

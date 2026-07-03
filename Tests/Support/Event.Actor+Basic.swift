@@ -9,8 +9,8 @@
 //  the reactor itself stays domain-agnostic.
 //
 
-@_spi(Syscall) public import Kernel
 public import IO
+@_spi(Syscall) public import Kernel
 public import Span_Raw_Primitives
 
 extension Event.Actor {

@@ -3,11 +3,10 @@
 //  swift-io
 //
 
-import Testing
+import IO_Test_Support
 import Memory_Primitives
 import Span_Raw_Primitives
-
-import IO_Test_Support
+import Testing
 
 @Suite(.timeLimit(.minutes(1)))
 struct IOBlockingRunTests {
@@ -16,7 +15,7 @@ struct IOBlockingRunTests {
         let io = IO.blocking()
         let pipe = try Kernel.Pipe.pipe()
 
-        let message: [UInt8] = [72, 101, 108, 108, 111] // "Hello"
+        let message: [UInt8] = [72, 101, 108, 108, 111]  // "Hello"
         let writePtr = unsafe UnsafeMutableRawBufferPointer.allocate(byteCount: message.count, alignment: 1)
         defer { writePtr.deallocate() }
         unsafe writePtr.copyBytes(from: message)
@@ -39,11 +38,11 @@ struct IOBlockingRunTests {
     @Test
     func `concurrent blocking calls complete — proves dedicated threads`() async throws {
         let count = 16
-        await withTaskGroup(of: Void.self) { group in
+        try await withThrowingTaskGroup(of: Void.self) { group in
             for _ in 0..<count {
                 group.addTask {
                     let io = IO.blocking()
-                    let pipe = try! Kernel.Pipe.pipe()
+                    let pipe = try Kernel.Pipe.pipe()
 
                     let ptr = unsafe UnsafeMutableRawBufferPointer.allocate(byteCount: 1, alignment: 1)
                     defer { ptr.deallocate() }
@@ -51,11 +50,11 @@ struct IOBlockingRunTests {
                     let writeBuf: Span.Raw = unsafe .init(UnsafeRawBufferPointer(ptr))
                     let readBuf: Span.Raw.Mutable = unsafe .init(ptr)
 
-                    _ = try! await io.write(to: pipe.write, from: writeBuf)
-                    _ = try! await io.read(from: pipe.read, into: readBuf)
+                    _ = try await io.write(to: pipe.write, from: writeBuf)
+                    _ = try await io.read(from: pipe.read, into: readBuf)
                 }
             }
-            await group.waitForAll()
+            try await group.waitForAll()
         }
     }
 
@@ -67,11 +66,11 @@ struct IOBlockingRunTests {
         // concurrent instances exercises this without deadlocking the
         // cooperative pool.
         let count = 16
-        await withTaskGroup(of: Void.self) { group in
+        try await withThrowingTaskGroup(of: Void.self) { group in
             for _ in 0..<count {
                 group.addTask {
                     let io = IO.blocking()
-                    let pipe = try! Kernel.Pipe.pipe()
+                    let pipe = try Kernel.Pipe.pipe()
 
                     let ptr = unsafe UnsafeMutableRawBufferPointer.allocate(byteCount: 1, alignment: 1)
                     defer { ptr.deallocate() }
@@ -79,18 +78,18 @@ struct IOBlockingRunTests {
                     let writeBuf: Span.Raw = unsafe .init(UnsafeRawBufferPointer(ptr))
                     let readBuf: Span.Raw.Mutable = unsafe .init(ptr)
 
-                    _ = try! await io.write(to: pipe.write, from: writeBuf)
-                    _ = try! await io.read(from: pipe.read, into: readBuf)
+                    _ = try await io.write(to: pipe.write, from: writeBuf)
+                    _ = try await io.read(from: pipe.read, into: readBuf)
 
                     // Suspension that previously broke TaskExecutor preference.
                     await Task.yield()
 
                     unsafe ptr[0] = 2
-                    _ = try! await io.write(to: pipe.write, from: writeBuf)
-                    _ = try! await io.read(from: pipe.read, into: readBuf)
+                    _ = try await io.write(to: pipe.write, from: writeBuf)
+                    _ = try await io.read(from: pipe.read, into: readBuf)
                 }
             }
-            await group.waitForAll()
+            try await group.waitForAll()
         }
     }
 

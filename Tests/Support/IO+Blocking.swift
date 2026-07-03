@@ -66,14 +66,14 @@ extension IO where Capabilities == Basic.Capabilities {
             close: { fd in
                 await actor.close(consume fd)
             },
-            ready: { _, _ throws(Basic.Error) -> Void in
+            ready: { _, _ throws(Basic.Error) in
                 // Blocking strategy treats all fds as always ready — the
                 // subsequent syscall is the actual block. Ready-then-
                 // syscall composes correctly across strategies with this
                 // no-op.
             }
         )
-        let runner = unsafe IO.Runner(
+        let runner = unsafe Self.Runner(
             executor: { unsafe actor.unownedExecutor },
             shutdown: {
                 // The caller owns the supplied executor's lifecycle

@@ -6,9 +6,9 @@
 //
 
 import IO_Test_Support
+@_spi(Syscall) import Kernel
 import Testing
 
-@_spi(Syscall) import Kernel
 @testable import IO_Events
 
 @Suite("Event.Source.Contract")
@@ -155,7 +155,7 @@ struct SourceContractTests {
         try source.deregister(id: id)
 
         // Poll should return 0 events (staleness suppression filters deregistered IDs)
-        var buffer = Array<Kernel.Event>(repeating: .empty, count: 10)
+        var buffer = [Kernel.Event](repeating: .empty, count: 10)
         let count = try source.poll(deadline: nil, into: &buffer)
         #expect(count == 0)
     }
@@ -169,7 +169,7 @@ struct SourceContractTests {
 
         controller.pushEvent(Kernel.Event(id: id, interest: .read, flags: []))
 
-        var buffer = Array<Kernel.Event>(repeating: .empty, count: 10)
+        var buffer = [Kernel.Event](repeating: .empty, count: 10)
         let count = try source.poll(deadline: nil, into: &buffer)
         #expect(count == 1)
         #expect(buffer[0].id == id)
@@ -189,7 +189,7 @@ struct SourceContractTests {
             Kernel.Event(id: id2, interest: .write, flags: []),
         ])
 
-        var buffer = Array<Kernel.Event>(repeating: .empty, count: 10)
+        var buffer = [Kernel.Event](repeating: .empty, count: 10)
         let count = try source.poll(deadline: nil, into: &buffer)
         #expect(count == 2)
         #expect(buffer[0].id == id1)
@@ -206,7 +206,7 @@ struct SourceContractTests {
 
         wakeup.wake()
 
-        var buffer = Array<Kernel.Event>(repeating: .empty, count: 10)
+        var buffer = [Kernel.Event](repeating: .empty, count: 10)
         let count = try source.poll(deadline: nil, into: &buffer)
         #expect(count == 0)  // Wakeup returns 0 events
     }

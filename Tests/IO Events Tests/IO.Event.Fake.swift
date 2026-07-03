@@ -5,9 +5,9 @@
 //  Deterministic fake event source for testing non-blocking I/O invariants.
 //
 
-import Synchronization
 import IO_Test_Support
 @_spi(Syscall) @_spi(Internal) import Kernel
+import Synchronization
 
 @_spi(Syscall) @testable import IO_Events
 
@@ -33,13 +33,13 @@ extension Event {
                 modify: { (fd: borrowing Kernel.Descriptor, id: Kernel.Event.ID, old: Kernel.Event.Interest, new: Kernel.Event.Interest) throws(Kernel.Event.Driver.Error) in
                     try controller.modify(fd: fd, id: id, old: old, new: new)
                 },
-                remove: { (fd: borrowing Kernel.Descriptor, id: Kernel.Event.ID, interest: Kernel.Event.Interest) throws(Kernel.Event.Driver.Error) in
+                remove: { (fd: borrowing Kernel.Descriptor, id: Kernel.Event.ID, _: Kernel.Event.Interest) throws(Kernel.Event.Driver.Error) in
                     try controller.remove(fd: fd, id: id)
                 },
                 arm: { (fd: borrowing Kernel.Descriptor, id: Kernel.Event.ID, interest: Kernel.Event.Interest) throws(Kernel.Event.Driver.Error) in
                     try controller.arm(fd: fd, id: id, interest: interest)
                 },
-                poll: { (deadline: Clock.Continuous.Deadline?, output: inout [Kernel.Event]) throws(Kernel.Event.Driver.Error) -> Int in
+                poll: { (_: Clock.Continuous.Deadline?, output: inout [Kernel.Event]) throws(Kernel.Event.Driver.Error) -> Int in
                     controller.poll(into: &output)
                 },
                 close: {
@@ -121,7 +121,10 @@ extension Event.Fake {
             let rawFd = fd._rawValue
             var error: Kernel.Event.Driver.Error?
             state.withLock { state in
-                guard !state.isShutdown else { error = .invalidDescriptor; return }
+                guard !state.isShutdown else {
+                    error = .invalidDescriptor
+                    return
+                }
                 state.registrations[id] = Registration(rawDescriptor: rawFd, interest: interest)
             }
             if let error { throw error }
@@ -135,8 +138,14 @@ extension Event.Fake {
         ) throws(Kernel.Event.Driver.Error) {
             var error: Kernel.Event.Driver.Error?
             state.withLock { state in
-                guard !state.isShutdown else { error = .invalidDescriptor; return }
-                guard state.registrations[id] != nil else { error = .notRegistered; return }
+                guard !state.isShutdown else {
+                    error = .invalidDescriptor
+                    return
+                }
+                guard state.registrations[id] != nil else {
+                    error = .notRegistered
+                    return
+                }
                 state.registrations[id]?.interest = new
             }
             if let error { throw error }
@@ -148,7 +157,10 @@ extension Event.Fake {
         ) throws(Kernel.Event.Driver.Error) {
             var error: Kernel.Event.Driver.Error?
             state.withLock { state in
-                guard !state.isShutdown else { error = .invalidDescriptor; return }
+                guard !state.isShutdown else {
+                    error = .invalidDescriptor
+                    return
+                }
                 _ = state.registrations.removeValue(forKey: id)
             }
             if let error { throw error }
@@ -161,8 +173,14 @@ extension Event.Fake {
         ) throws(Kernel.Event.Driver.Error) {
             var error: Kernel.Event.Driver.Error?
             state.withLock { state in
-                guard !state.isShutdown else { error = .invalidDescriptor; return }
-                guard state.registrations[id] != nil else { error = .notRegistered; return }
+                guard !state.isShutdown else {
+                    error = .invalidDescriptor
+                    return
+                }
+                guard state.registrations[id] != nil else {
+                    error = .notRegistered
+                    return
+                }
             }
             if let error { throw error }
         }
