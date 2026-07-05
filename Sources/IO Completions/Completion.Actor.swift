@@ -94,9 +94,7 @@
             /// `Buffer` is fully qualified to `Buffer_Primitive.Buffer`: this
             /// target imports `Kernel_Completion`, whose `Kernel.Completion.Buffer`
             /// (non-generic) otherwise shadows the generic column buffer.
-            private typealias Registry = Dictionary_Primitives.Dictionary<
-                Hash.Indexed<Buffer_Primitive.Buffer<Storage<Memory.Allocator<Memory.Heap>>.Contiguous<Hash.Entry<Kernel.Completion.Token, Completion.Entry>>>.Linear>
-            >
+            private typealias Registry = Dictionary_Primitives.Dictionary<Kernel.Completion.Token, Completion.Entry>
 
             /// In-flight entries keyed by operation token (counter-based ID).
             ///
