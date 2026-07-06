@@ -11,7 +11,13 @@ import Testing
 
 @testable import IO_Events
 
-@Suite("Event.Source.Contract")
+@Suite(
+    "Event.Source.Contract",
+    .disabled(
+        if: Toolchain.hasTaggedMetadataSIGSEGV,
+        "catalog §A9: Tagged<Kernel.Event> registry key forces the institute __Dictionary/__HashIndexed metadata; swift_getTypeByMangledName null-deref SIGSEGV at Driver.init insert on compiler(<6.4). Fixed on Swift 6.4+. See swift-institute/Issues/swift-issue-tagged-dictionary-insert-metadata-crash."
+    )
+)
 struct SourceContractTests {
 
     // MARK: - Registration Contract
