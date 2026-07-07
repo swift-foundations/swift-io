@@ -161,7 +161,7 @@ struct SourceContractTests {
         try source.deregister(id: id)
 
         // Poll should return 0 events (staleness suppression filters deregistered IDs)
-        var buffer = Swift.Array<Kernel.Event>(repeating: .empty, count: 10)
+        var buffer = [Kernel.Event](repeating: .empty, count: 10)
         let count = try source.poll(deadline: nil, into: &buffer)
         #expect(count == 0)
     }
@@ -175,7 +175,7 @@ struct SourceContractTests {
 
         controller.pushEvent(Kernel.Event(id: id, interest: .read, flags: []))
 
-        var buffer = Swift.Array<Kernel.Event>(repeating: .empty, count: 10)
+        var buffer = [Kernel.Event](repeating: .empty, count: 10)
         let count = try source.poll(deadline: nil, into: &buffer)
         #expect(count == 1)
         #expect(buffer[0].id == id)
@@ -195,7 +195,7 @@ struct SourceContractTests {
             Kernel.Event(id: id2, interest: .write, flags: []),
         ])
 
-        var buffer = Swift.Array<Kernel.Event>(repeating: .empty, count: 10)
+        var buffer = [Kernel.Event](repeating: .empty, count: 10)
         let count = try source.poll(deadline: nil, into: &buffer)
         #expect(count == 2)
         #expect(buffer[0].id == id1)
@@ -212,7 +212,7 @@ struct SourceContractTests {
 
         wakeup.wake()
 
-        var buffer = Swift.Array<Kernel.Event>(repeating: .empty, count: 10)
+        var buffer = [Kernel.Event](repeating: .empty, count: 10)
         let count = try source.poll(deadline: nil, into: &buffer)
         #expect(count == 0)  // Wakeup returns 0 events
     }
