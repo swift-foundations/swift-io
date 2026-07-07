@@ -161,6 +161,10 @@ struct SourceContractTests {
         try source.deregister(id: id)
 
         // Poll should return 0 events (staleness suppression filters deregistered IDs)
+        // Deliberate: [Kernel.Event](repeating:count:) parses ambiguously against
+        // ISO_9945.Kernel.Event on Ubuntu release builds (b3c5b86e); the fully-qualified
+        // Swift.Array<Kernel.Event> form removes the ambiguity and must stay explicit.
+        // swiftlint:disable:next syntactic_sugar
         var buffer = Swift.Array<Kernel.Event>(repeating: .empty, count: 10)
         let count = try source.poll(deadline: nil, into: &buffer)
         #expect(count == 0)
@@ -175,6 +179,10 @@ struct SourceContractTests {
 
         controller.pushEvent(Kernel.Event(id: id, interest: .read, flags: []))
 
+        // Deliberate: [Kernel.Event](repeating:count:) parses ambiguously against
+        // ISO_9945.Kernel.Event on Ubuntu release builds (b3c5b86e); the fully-qualified
+        // Swift.Array<Kernel.Event> form removes the ambiguity and must stay explicit.
+        // swiftlint:disable:next syntactic_sugar
         var buffer = Swift.Array<Kernel.Event>(repeating: .empty, count: 10)
         let count = try source.poll(deadline: nil, into: &buffer)
         #expect(count == 1)
@@ -195,6 +203,10 @@ struct SourceContractTests {
             Kernel.Event(id: id2, interest: .write, flags: []),
         ])
 
+        // Deliberate: [Kernel.Event](repeating:count:) parses ambiguously against
+        // ISO_9945.Kernel.Event on Ubuntu release builds (b3c5b86e); the fully-qualified
+        // Swift.Array<Kernel.Event> form removes the ambiguity and must stay explicit.
+        // swiftlint:disable:next syntactic_sugar
         var buffer = Swift.Array<Kernel.Event>(repeating: .empty, count: 10)
         let count = try source.poll(deadline: nil, into: &buffer)
         #expect(count == 2)
@@ -212,6 +224,10 @@ struct SourceContractTests {
 
         wakeup.wake()
 
+        // Deliberate: [Kernel.Event](repeating:count:) parses ambiguously against
+        // ISO_9945.Kernel.Event on Ubuntu release builds (b3c5b86e); the fully-qualified
+        // Swift.Array<Kernel.Event> form removes the ambiguity and must stay explicit.
+        // swiftlint:disable:next syntactic_sugar
         var buffer = Swift.Array<Kernel.Event>(repeating: .empty, count: 10)
         let count = try source.poll(deadline: nil, into: &buffer)
         #expect(count == 0)  // Wakeup returns 0 events
