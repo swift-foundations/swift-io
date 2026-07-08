@@ -85,17 +85,6 @@
             /// construction.
             nonisolated private let completion: Kernel.Thread.Executor.Completion
 
-            /// The in-flight entries column — the move-only ADT-families
-            /// Dictionary over the ordered hashed entry column (the
-            /// generic-instantiation alias localizes the column choice).
-            /// `Completion.Entry` is `~Copyable`, so the move-only column is
-            /// the correct ownership shape; the dup'd descriptors live in the
-            /// column until the CQE arrives.
-            /// `Buffer` is fully qualified to `Buffer_Primitive.Buffer`: this
-            /// target imports `Kernel_Completion`, whose `Kernel.Completion.Buffer`
-            /// (non-generic) otherwise shadows the generic column buffer.
-            private typealias Registry = Dictionary_Primitives.Dictionary<Kernel.Completion.Token, Completion.Entry>
-
             /// In-flight entries keyed by operation token (counter-based ID).
             ///
             /// Each in-flight submission owns one entry. On CQE arrival the
@@ -162,6 +151,21 @@
                 completion.shutdown()
             }
         }
+    }
+
+    // MARK: - Registry typealias
+
+    extension Completion.Actor {
+        /// The in-flight entries column — the move-only ADT-families
+        /// Dictionary over the ordered hashed entry column (the
+        /// generic-instantiation alias localizes the column choice).
+        /// `Completion.Entry` is `~Copyable`, so the move-only column is
+        /// the correct ownership shape; the dup'd descriptors live in the
+        /// column until the CQE arrives.
+        /// `Buffer` is fully qualified to `Buffer_Primitive.Buffer`: this
+        /// target imports `Kernel_Completion`, whose `Kernel.Completion.Buffer`
+        /// (non-generic) otherwise shadows the generic column buffer.
+        private typealias Registry = Dictionary_Primitives.Dictionary<Kernel.Completion.Token, Completion.Entry>
     }
 
     // MARK: - Tick: Outcome init from actor handle + wait thunk

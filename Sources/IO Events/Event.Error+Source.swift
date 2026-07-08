@@ -18,7 +18,7 @@
         /// - `invalidDescriptor` → `invalidDescriptor`
         /// - `notRegistered` → `notRegistered`
         @inlinable
-        init(_ error: Kernel.Event.Driver.Error) {
+        package init(_ error: Kernel.Event.Driver.Error) {
             switch error {
             case .platform(let code):
                 self = .platform(code)
