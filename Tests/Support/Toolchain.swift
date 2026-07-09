@@ -28,7 +28,9 @@
 /// The reducer proves the trigger is the Tagged KEY alone (a Copyable `Int`
 /// value crashes just as a `~Copyable` value does) and that it fires in both
 /// DEBUG and RELEASE.
-public enum Toolchain {
+public enum Toolchain {}
+
+extension Toolchain {
     /// `true` on Swift compilers older than 6.4, where the §A9 `Tagged`
     /// metadata SIGSEGV fires. Used as the predicate for the
     /// `.disabled(if:)` trait on the affected io suite. `.disabled(if:)`

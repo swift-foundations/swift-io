@@ -56,112 +56,115 @@
             private var _started: Bool = true
 
             public init() {}
-
-            // MARK: - Startup Gate
-
-            /// Close the gate. The executor thread blocks on drain until
-            /// ``start()`` is called. Used by ``IO/Completion/Actor/fake()``
-            /// to ensure `handle.actor = self` completes before the first
-            /// tick fires.
-            public func holdUntilStarted() {
-                sync.synchronize { _started = false }
-            }
-
-            /// Open the gate. Wakes the blocked executor thread.
-            public func start() {
-                sync.synchronize { _started = true }
-                sync.broadcast()
-            }
-
-            // MARK: - Auto-Responder
-
-            /// Auto-generate a CQE when a submission arrives.
-            ///
-            /// Called synchronously inside the driver's `submit()` under
-            /// the lock. Non-nil return enqueues the event for the next
-            /// drain (same tick cycle). Nil leaves the operation pending.
-            public var onSubmit: (@Sendable (Kernel.Completion.Submission) -> Kernel.Completion.Event?)? {
-                get { sync.synchronize { _onSubmit } }
-                set { sync.synchronize { _onSubmit = newValue } }
-            }
-
-            // MARK: - Observables
-
-            /// All submissions recorded.
-            public var submissions: [Kernel.Completion.Submission] {
-                sync.synchronize { _submissions }
-            }
-
-            /// Number of `flush()` calls.
-            public var flushCount: Int {
-                sync.synchronize { _flushCount }
-            }
-
-            /// Whether `close()` has been called.
-            public var isClosed: Bool {
-                sync.synchronize { _isClosed }
-            }
-
-            /// Block until `close()` has been called on the driver.
-            public func waitUntilClosed(
-                timeout: Duration = .seconds(5)
-            ) -> Bool {
-                let deadline = ContinuousClock.now.advanced(by: timeout)
-                sync.lock()
-                defer { sync.unlock() }
-                while !_isClosed {
-                    let remaining = ContinuousClock.now.duration(to: deadline)
-                    guard remaining > .zero else { return false }
-                    _ = sync.wait(condition: 0, timeout: remaining)
-                }
-                return true
-            }
-
-            // MARK: - Driver-Facing
-
-            func recordSubmission(_ submission: Kernel.Completion.Submission) {
-                sync.synchronize {
-                    _submissions.append(submission)
-                    if let respond = _onSubmit, let event = respond(submission) {
-                        _completions.append(event)
-                    }
-                }
-                sync.broadcast()
-            }
-
-            func drainCompletions(
-                _ visit: (Kernel.Completion.Event) -> Void
-            ) -> Kernel.Completion.Event.Count {
-                sync.lock()
-                while !_started && !_isClosed {
-                    sync.wait(condition: 0)
-                }
-                let events = _completions
-                _completions.removeAll()
-                sync.unlock()
-
-                var count: Kernel.Completion.Event.Count = .zero
-                for event in events {
-                    visit(event)
-                    count += .one
-                }
-                return count
-            }
-
-            func recordFlush() -> Kernel.Completion.Submission.Count {
-                sync.synchronize { _flushCount += 1 }
-                return .zero
-            }
-
-            func recordClose() {
-                sync.synchronize {
-                    _isClosed = true
-                }
-                sync.broadcast()
-            }
-
-            func recordWakeup() {}
         }
+    }
+
+    extension Kernel.Completion.Fake {
+
+        // MARK: - Startup Gate
+
+        /// Close the gate. The executor thread blocks on drain until
+        /// ``start()`` is called. Used by ``IO/Completion/Actor/fake()``
+        /// to ensure `handle.actor = self` completes before the first
+        /// tick fires.
+        public func holdUntilStarted() {
+            sync.synchronize { _started = false }
+        }
+
+        /// Open the gate. Wakes the blocked executor thread.
+        public func start() {
+            sync.synchronize { _started = true }
+            sync.broadcast()
+        }
+
+        // MARK: - Auto-Responder
+
+        /// Auto-generate a CQE when a submission arrives.
+        ///
+        /// Called synchronously inside the driver's `submit()` under
+        /// the lock. Non-nil return enqueues the event for the next
+        /// drain (same tick cycle). Nil leaves the operation pending.
+        public var onSubmit: (@Sendable (Kernel.Completion.Submission) -> Kernel.Completion.Event?)? {
+            get { sync.synchronize { _onSubmit } }
+            set { sync.synchronize { _onSubmit = newValue } }
+        }
+
+        // MARK: - Observables
+
+        /// All submissions recorded.
+        public var submissions: [Kernel.Completion.Submission] {
+            sync.synchronize { _submissions }
+        }
+
+        /// Number of `flush()` calls.
+        public var flushCount: Int {
+            sync.synchronize { _flushCount }
+        }
+
+        /// Whether `close()` has been called.
+        public var isClosed: Bool {
+            sync.synchronize { _isClosed }
+        }
+
+        /// Block until `close()` has been called on the driver.
+        public func waitUntilClosed(
+            timeout: Duration = .seconds(5)
+        ) -> Bool {
+            let deadline = ContinuousClock.now.advanced(by: timeout)
+            sync.lock()
+            defer { sync.unlock() }
+            while !_isClosed {
+                let remaining = ContinuousClock.now.duration(to: deadline)
+                guard remaining > .zero else { return false }
+                _ = sync.wait(condition: 0, timeout: remaining)
+            }
+            return true
+        }
+
+        // MARK: - Driver-Facing
+
+        func recordSubmission(_ submission: Kernel.Completion.Submission) {
+            sync.synchronize {
+                _submissions.append(submission)
+                if let respond = _onSubmit, let event = respond(submission) {
+                    _completions.append(event)
+                }
+            }
+            sync.broadcast()
+        }
+
+        func drainCompletions(
+            _ visit: (Kernel.Completion.Event) -> Void
+        ) -> Kernel.Completion.Event.Count {
+            sync.lock()
+            while !_started && !_isClosed {
+                sync.wait(condition: 0)
+            }
+            let events = _completions
+            _completions.removeAll()
+            sync.unlock()
+
+            var count: Kernel.Completion.Event.Count = .zero
+            for event in events {
+                visit(event)
+                count += .one
+            }
+            return count
+        }
+
+        func recordFlush() -> Kernel.Completion.Submission.Count {
+            sync.synchronize { _flushCount += 1 }
+            return .zero
+        }
+
+        func recordClose() {
+            sync.synchronize {
+                _isClosed = true
+            }
+            sync.broadcast()
+        }
+
+        func recordWakeup() {}
     }
 
     // MARK: - Kernel.Completion.fake(backend:)

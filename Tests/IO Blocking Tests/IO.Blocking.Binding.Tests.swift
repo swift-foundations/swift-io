@@ -91,12 +91,18 @@ extension Basic.BindingTest.MandatoryBinding {
 
 private final class ThreadRecorder: Sendable {
     private let storage = Mutex<[Kernel.Thread.ID]>([])
+}
+
+extension ThreadRecorder {
     func record(_ id: Kernel.Thread.ID) { storage.withLock { $0.append(id) } }
     func snapshot() -> [Kernel.Thread.ID] { storage.withLock { $0 } }
 }
 
 private final class OrderCounter: Sendable {
     private let storage = Mutex<[Int]>([])
+}
+
+extension OrderCounter {
     func append(_ value: Int) { storage.withLock { $0.append(value) } }
     func snapshot() -> [Int] { storage.withLock { $0 } }
 }
@@ -211,7 +217,9 @@ actor SharedExecutorApp {
         self.executor = executor
         self.io = IO.blocking(on: executor)
     }
+}
 
+extension SharedExecutorApp {
     nonisolated var unownedExecutor: UnownedSerialExecutor {
         io.unownedExecutor
     }
