@@ -21,9 +21,9 @@ import Testing
 extension Basic {
     enum BindingTest {
         @Suite struct MandatoryBinding {}
-        @Suite struct SharedExecutor {}
-        @Suite struct ZeroHop {}
-        @Suite struct HeadOfLine {}
+        @Suite struct `Shared Executor` {}
+        @Suite struct `Zero Hop` {}
+        @Suite struct `Head Of Line` {}
     }
 }
 

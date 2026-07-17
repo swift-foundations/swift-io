@@ -20,7 +20,7 @@
         @Suite(
             .disabled(
                 if: Toolchain.hasTaggedMetadataSIGSEGV,
-                "catalog §A9: IO.completionsTest() drives a real strategy actor — Completion.Actor's Registry (site 4, Kernel.Completion.Token key) on Linux, or Event.Actor's Kernel.Event.Driver registry (site 3, Kernel.Event.ID key) on Darwin — both Dictionary<Tagged-key, …>; swift_getTypeByMangledName null-deref SIGSEGV on the first registry insert on compiler(<6.4). Fixed on Swift 6.4+. See swift-institute/Issues/swift-issue-tagged-dictionary-insert-metadata-crash."
+
             )
         )
         struct Witness {

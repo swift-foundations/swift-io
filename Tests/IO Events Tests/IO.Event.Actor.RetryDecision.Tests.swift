@@ -11,8 +11,8 @@ import Testing
 
 @testable import IO_Events
 
-@Suite("Event.Actor.RetryDecision")
-struct ActorRetryDecisionTests {
+@Suite
+struct Test {
 
     // MARK: - Transient errors retry
 

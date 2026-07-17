@@ -20,7 +20,7 @@
         @Suite(
             .disabled(
                 if: Toolchain.hasTaggedMetadataSIGSEGV,
-                "catalog §A9 site 4: Kernel.Completion.Token (Tagged<Kernel.Completion, UInt64>) registry key forces the institute __Dictionary/__HashIndexed metadata; swift_getTypeByMangledName null-deref SIGSEGV at Completion.Actor's Registry insert (Sources/IO Completions/Completion.Actor.swift:168) on compiler(<6.4). Fixed on Swift 6.4+. See swift-institute/Issues/swift-issue-tagged-dictionary-insert-metadata-crash."
+
             )
         )
         struct ActorTests {
