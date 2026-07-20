@@ -70,8 +70,11 @@
             /// Polling is `@unchecked Sendable` by construction.
             nonisolated private let polling: Kernel.Thread.Executor.Polling
 
-            /// Lifecycle state.
-            fileprivate var state: State = .running
+            /// Lifecycle state. Internal (not fileprivate) so the
+            /// lifecycle regression tests can observe the halt transition
+            /// via `@testable import` without driving the §A9-affected
+            /// driver registry.
+            var state: State = .running
 
             /// Maps descriptor identity to the driver-assigned registration ID.
             private var registeredIDs: [Event.ID: Event.ID] = [:]
@@ -265,14 +268,20 @@
             }
         }
 
-        /// Close every per-call sender across every registration and clear
-        /// the dispatch table. Called from the tick closure on fatal wait
-        /// failures so awaiters observe shutdown rather than hanging.
+        /// Transition to `.shuttingDown`, close every per-call sender
+        /// across every registration, and clear both tables. Called from
+        /// the tick closure on fatal wait failures so awaiters observe
+        /// shutdown rather than hanging, and so subsequent
+        /// ``register(_:)`` / ``wait(for:interest:)`` calls fail fast
+        /// with `.left(.shutdown)` instead of enlisting work against a
+        /// dead poll loop.
         fileprivate func cleanup() {
+            state = .shuttingDown
             for (_, registration) in registrations {
                 registration.senders.closeAll()
             }
             registrations.removeAll()
+            registeredIDs.removeAll()
         }
     }
 
@@ -288,11 +297,14 @@
         public func register(
             _ fd: borrowing Kernel.Descriptor
         ) throws(Event.Failure) -> Event.ID {
+            // Lifecycle check BEFORE the fast path: after a fatal-poll
+            // halt no registration may be handed out — not even a stale
+            // previously-registered ID.
+            guard state == .running else { throw .left(.shutdown) }
             let descriptorID = Kernel.Event.ID(descriptor: fd)
             if let existingID = registeredIDs[descriptorID] {
                 return existingID
             }
-            guard state == .running else { throw .left(.shutdown) }
 
             let duped: Kernel.Descriptor
             do throws(Kernel.Descriptor.Duplicate.Error) {
@@ -316,7 +328,7 @@
                 throw .right(Event.Error(error))
             }
 
-            registrations[id] = Registration(interest: [.read, .write])
+            registrations[id] = Registration()
             registeredIDs[descriptorID] = id
             return id
         }
@@ -341,6 +353,10 @@
             for registrationID: Event.ID,
             interest: Kernel.Event.Interest
         ) async throws(Event.Failure) {
+            // Lifecycle check before enlisting a sender: after a
+            // fatal-poll halt no dispatch will ever drain the sender, so
+            // enlisting would hang the awaiter forever.
+            guard state == .running else { throw .left(.shutdown) }
             var channel = Async.Channel<Kernel.Event>.Unbounded()
             registrations[registrationID]?.senders.append(channel.sender, for: interest)
 

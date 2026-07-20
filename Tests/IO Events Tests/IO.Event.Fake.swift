@@ -43,7 +43,7 @@ extension Event.Fake {
                 try controller.arm(fd: fd, id: id, interest: interest)
             },
             poll: { (_: Clock.Continuous.Deadline?, output: inout [Kernel.Event]) throws(Kernel.Event.Driver.Error) -> Int in
-                controller.poll(into: &output)
+                try controller.poll(into: &output)
             },
             close: {
                 controller.close()
@@ -83,6 +83,9 @@ extension Event.Fake.Controller {
         var isShutdown: Bool = false
         /// Whether close() was called.
         var isClosed: Bool = false
+        /// Error the next poll throws (one-shot), simulating a fatal
+        /// (or transient) wait failure surfacing from the driver.
+        var nextPollError: Kernel.Event.Driver.Error?
     }
 
     struct Registration: Sendable, Equatable {
@@ -114,6 +117,11 @@ extension Event.Fake.Controller {
 
     func simulateShutdown() {
         state.withLock { $0.isShutdown = true }
+    }
+
+    /// Make the next poll throw the given driver error (one-shot).
+    func failNextPoll(with error: Kernel.Event.Driver.Error) {
+        state.withLock { $0.nextPollError = error }
     }
 
     // MARK: - Backend Operations (called by Driver closures)
@@ -190,8 +198,14 @@ extension Event.Fake.Controller {
         if let error { throw error }
     }
 
-    func poll(into buffer: inout [Kernel.Event]) -> Int {
-        state.withLock { state in
+    func poll(into buffer: inout [Kernel.Event]) throws(Kernel.Event.Driver.Error) -> Int {
+        var pollError: Kernel.Event.Driver.Error?
+        let count = state.withLock { state -> Int in
+            if let error = state.nextPollError {
+                state.nextPollError = nil
+                pollError = error
+                return 0
+            }
             if state.wakeupPending {
                 state.wakeupPending = false
                 return 0
@@ -202,6 +216,8 @@ extension Event.Fake.Controller {
             for i in 0..<count { buffer[i] = events[i] }
             return count
         }
+        if let pollError { throw pollError }
+        return count
     }
 
     func close() {

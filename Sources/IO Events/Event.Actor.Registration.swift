@@ -25,7 +25,6 @@
         /// invokes `Senders.closeAll()`. The `~Copyable` receiver is held
         /// locally by the awaiter — never shared.
         struct Registration {
-            var interest: Kernel.Event.Interest
             var senders: Senders = Senders()
         }
     }
