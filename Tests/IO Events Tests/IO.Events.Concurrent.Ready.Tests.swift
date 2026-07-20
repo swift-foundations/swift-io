@@ -31,6 +31,7 @@ import Testing
 
 @testable import IO_Events
 
+extension Event.Actor {
 @Suite(
 
     .disabled(
@@ -38,11 +39,12 @@ import Testing
         "catalog §A9: Event.Actor() drives a real Kernel.Event.Driver whose registry is Dictionary<Kernel.Event.ID, Registration> (site 3, Kernel.Event.ID = Tagged<ISO_9945.Kernel.Event, UInt>); swift_getTypeByMangledName null-deref SIGSEGV on the first registry insert (register, via actor.register/io.write/read/ready) on compiler(<6.4). Fixed on Swift 6.4+. See swift-institute/Issues/swift-issue-tagged-dictionary-insert-metadata-crash."
     )
 )
-struct Test {}
+struct `Concurrent Ready` {}
+}
 
 // MARK: - Concurrent reproduction (whitebox)
 
-extension IOEventsConcurrentReadyTests {
+extension Event.Actor.`Concurrent Ready` {
 
     /// Two concurrent `wait(for: registrationID, interest: .read)` calls
     /// on the SAME pre-obtained registration ID. Each creates its own
@@ -84,7 +86,7 @@ extension IOEventsConcurrentReadyTests {
 
 // MARK: - Control: sequential readiness on the same fd
 
-extension IOEventsConcurrentReadyTests {
+extension Event.Actor.`Concurrent Ready` {
 
     /// Control: sequential `io.ready` calls on the same fd must work both
     /// before and after the per-call channel fix. If this regresses, the

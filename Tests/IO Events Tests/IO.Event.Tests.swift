@@ -9,7 +9,9 @@ import IO_Events
 import IO_Test_Support
 import Testing
 
-@Suite
-struct Test {
-    // Placeholder - full tests pending
+extension Event {
+    @Suite
+    struct Test {
+        // Placeholder - full tests pending
+    }
 }

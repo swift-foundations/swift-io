@@ -11,6 +11,7 @@ import Testing
 
 @testable import IO_Events
 
+extension Event.Fake {
 @Suite(
 
     .disabled(
@@ -272,6 +273,7 @@ struct Test {
             try source.modify(id: id, interest: .write)
         }
     }
+}
 }
 
 // MARK: - Empty Event Helper

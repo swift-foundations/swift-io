@@ -14,6 +14,7 @@ import Memory_Primitives
 import Span_Raw_Primitives
 import Testing
 
+extension Event.Actor {
 @Suite(
 
     .disabled(
@@ -22,10 +23,11 @@ import Testing
     )
 )
 struct Test {}
+}
 
 // MARK: - Pipe round-trip
 
-extension IOEventsTests {
+extension Event.Actor.Test {
 
     @Test
     func `pipe round-trip: write then read returns the bytes written`() async throws {
@@ -66,7 +68,7 @@ extension IOEventsTests {
 
 // MARK: - Ready composition
 
-extension IOEventsTests {
+extension Event.Actor.Test {
 
     @Test
     func `ready on a pipe write-end returns immediately when writable`() async throws {
@@ -124,7 +126,7 @@ extension IOEventsTests {
 
 // MARK: - Shared-executor binding
 
-extension IOEventsTests {
+extension Event.Actor.Test {
 
     @Test
     func `IO.events witness carries a non-default unownedExecutor`() async throws {

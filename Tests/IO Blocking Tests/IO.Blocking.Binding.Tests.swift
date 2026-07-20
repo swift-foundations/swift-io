@@ -140,7 +140,7 @@ private func makeProbedIO(
 
 // MARK: - Shared Executor
 
-extension Basic.BindingTest.SharedExecutor {
+extension Basic.BindingTest.`Shared Executor` {
     @Test
     func `two IOs on the same executor — both ops land on the SAME OS thread`() async throws {
         let executor = Kernel.Thread.Executor()
@@ -241,7 +241,7 @@ extension SharedExecutorApp {
     }
 }
 
-extension Basic.BindingTest.ZeroHop {
+extension Basic.BindingTest.`Zero Hop` {
     @Test
     func `actor sharing IO's executor lands on the SAME OS thread as a probe IO`() async throws {
         let executor = Kernel.Thread.Executor()
@@ -284,7 +284,7 @@ extension Basic.BindingTest.ZeroHop {
 
 // MARK: - Head-of-Line Blocking
 
-extension Basic.BindingTest.HeadOfLine {
+extension Basic.BindingTest.`Head Of Line` {
     @Test
     func `ops on a single .blocking() IO serialize on the actor`() async throws {
         // Demonstrates expected strategy-specific behavior — actor isolation
