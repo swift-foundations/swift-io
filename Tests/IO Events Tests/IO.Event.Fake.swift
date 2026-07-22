@@ -86,6 +86,10 @@ extension Event.Fake.Controller {
         /// Error the next poll throws (one-shot), simulating a fatal
         /// (or transient) wait failure surfacing from the driver.
         var nextPollError: Kernel.Event.Driver.Error?
+        /// Error the next arm throws (one-shot).
+        var nextArmError: Kernel.Event.Driver.Error?
+        /// Number of backend arm invocations.
+        var armCount: Int = 0
     }
 
     struct Registration: Sendable, Equatable {
@@ -122,6 +126,15 @@ extension Event.Fake.Controller {
     /// Make the next poll throw the given driver error (one-shot).
     func failNextPoll(with error: Kernel.Event.Driver.Error) {
         state.withLock { $0.nextPollError = error }
+    }
+
+    /// Make the next arm throw the given driver error (one-shot).
+    func failNextArm(with error: Kernel.Event.Driver.Error) {
+        state.withLock { $0.nextArmError = error }
+    }
+
+    func armCount() -> Int {
+        state.withLock { $0.armCount }
     }
 
     // MARK: - Backend Operations (called by Driver closures)
@@ -186,6 +199,7 @@ extension Event.Fake.Controller {
     ) throws(Kernel.Event.Driver.Error) {
         var error: Kernel.Event.Driver.Error?
         state.withLock { state in
+            state.armCount += 1
             guard !state.isShutdown else {
                 error = .invalidDescriptor
                 return
@@ -193,6 +207,10 @@ extension Event.Fake.Controller {
             guard state.registrations[id] != nil else {
                 error = .notRegistered
                 return
+            }
+            if let next = state.nextArmError {
+                state.nextArmError = nil
+                error = next
             }
         }
         if let error { throw error }

@@ -14,8 +14,7 @@
 
     extension Event.Actor.Registration {
         /// Per-interest sender lists. Each list holds the Copyable sender
-        /// half of one `Async.Channel.Unbounded` per concurrent awaiter
-        /// on that interest direction.
+        /// half of one `Async.Channel.Unbounded` per concurrent awaiter.
         struct Senders {
             var read: [Async.Channel<Kernel.Event>.Unbounded.Sender] = []
             var write: [Async.Channel<Kernel.Event>.Unbounded.Sender] = []
@@ -42,6 +41,32 @@
         }
     }
 
+    // MARK: - Remove
+
+    extension Event.Actor.Registration.Senders {
+        /// Remove and close one exact sender endpoint. A repeated removal is a no-op,
+        /// which makes cancellation safe when dispatch or shutdown won the
+        /// race and already drained the matching list.
+        mutating func remove(
+            _ sender: Async.Channel<Kernel.Event>.Unbounded.Sender,
+            for interest: Kernel.Event.Interest
+        ) {
+            if interest.contains(.read) {
+                if let index = read.firstIndex(of: sender) {
+                    read.remove(at: index).close()
+                }
+            } else if interest.contains(.write) {
+                if let index = write.firstIndex(of: sender) {
+                    write.remove(at: index).close()
+                }
+            } else {
+                if let index = priority.firstIndex(of: sender) {
+                    priority.remove(at: index).close()
+                }
+            }
+        }
+    }
+
     // MARK: - Broadcast and drain
 
     extension Event.Actor.Registration.Senders {
@@ -61,27 +86,20 @@
                 flags: event.flags
             )
             if interest.contains(.read) {
-                for sender in read {
-                    do throws(Async.Channel<Kernel.Event>.Error) {
-                        try sender.send(directed)
-                    } catch {
-                        // Best-effort broadcast: a closed receiver is dropped
-                        // silently; other senders on this list still get delivery.
-                    }
-                }
+                let senders = read
                 read.removeAll()
+                for sender in senders {
+                    do throws(Async.Channel<Kernel.Event>.Error) {
+                        try sender.send(directed)
+                    } catch {
+                        // Best-effort broadcast: a closed receiver is dropped
+                        // silently; other senders on this list still get delivery.
+                    }
+                }
             } else if interest.contains(.write) {
-                for sender in write {
-                    do throws(Async.Channel<Kernel.Event>.Error) {
-                        try sender.send(directed)
-                    } catch {
-                        // Best-effort broadcast: a closed receiver is dropped
-                        // silently; other senders on this list still get delivery.
-                    }
-                }
+                let senders = write
                 write.removeAll()
-            } else {
-                for sender in priority {
+                for sender in senders {
                     do throws(Async.Channel<Kernel.Event>.Error) {
                         try sender.send(directed)
                     } catch {
@@ -89,7 +107,17 @@
                         // silently; other senders on this list still get delivery.
                     }
                 }
+            } else {
+                let senders = priority
                 priority.removeAll()
+                for sender in senders {
+                    do throws(Async.Channel<Kernel.Event>.Error) {
+                        try sender.send(directed)
+                    } catch {
+                        // Best-effort broadcast: a closed receiver is dropped
+                        // silently; other senders on this list still get delivery.
+                    }
+                }
             }
         }
     }

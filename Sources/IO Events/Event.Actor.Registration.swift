@@ -19,8 +19,10 @@
         /// A registered descriptor with its per-call event senders.
         ///
         /// Each `io.ready` call creates a transient
-        /// `Async.Channel.Unbounded` and appends its Copyable sender to
-        /// the interest-specific list in ``Senders``. ``dispatch`` invokes
+        /// `Async.Channel.Unbounded` and stores its Copyable sender in the
+        /// interest-specific list in ``Senders``. Cancellation removes the
+        /// exact endpoint by its shared channel-storage identity.
+        /// ``dispatch`` invokes
         /// `Senders.drain(event:for:)` for each interest bit; ``cleanup``
         /// invokes `Senders.closeAll()`. The `~Copyable` receiver is held
         /// locally by the awaiter — never shared.

@@ -82,6 +82,11 @@
             /// Active registrations for direct event dispatch.
             var registrations: [Event.ID: Registration] = [:]
 
+            /// Guards the actor-owned Polling shutdown call. Polling documents
+            /// shutdown as non-idempotent, so every actor lifecycle path must
+            /// pass through this flag before invoking it.
+            private var isPollingShutdown = false
+
             /// Creates the actor with the platform event source and its own
             /// OS thread.
             ///
@@ -136,7 +141,10 @@
             }
 
             deinit {
-                polling.shutdown()
+                if !isPollingShutdown {
+                    isPollingShutdown = true
+                    polling.shutdown()
+                }
             }
         }
     }
@@ -276,12 +284,28 @@
         /// with `.left(.shutdown)` instead of enlisting work against a
         /// dead poll loop.
         fileprivate func cleanup() {
+            guard state == .running else { return }
             state = .shuttingDown
             for (_, registration) in registrations {
                 registration.senders.closeAll()
             }
             registrations.removeAll()
             registeredIDs.removeAll()
+        }
+
+        /// Reject new work, close all enlisted waiters, clear actor tables,
+        /// and stop the actor-owned polling loop exactly once.
+        ///
+        /// Safe to call repeatedly. Calls racing with dispatch or waiter
+        /// cancellation are serialized by actor isolation. Polling joins its
+        /// thread when called externally and detaches when called from this
+        /// actor's executor thread. Its retained event source remains owned by
+        /// Polling until the actor and executor are released.
+        public func shutdown() {
+            cleanup()
+            guard !isPollingShutdown else { return }
+            isPollingShutdown = true
+            polling.shutdown()
         }
     }
 
@@ -334,14 +358,24 @@
         }
 
         /// Arm the driver for the given interest.
-        private func arm(id: Event.ID, interest: Kernel.Event.Interest) {
-            do throws(Kernel.Event.Driver.Error) {
-                try polling.source.arm(id: id, interest: interest)
-            } catch {
-                // Best-effort: a driver-level arm failure surfaces later as a
-                // missing readiness notification on `wait(for:interest:)`,
-                // which already has its own cancellation/shutdown handling.
-            }
+        private func arm(
+            id: Event.ID,
+            interest: Kernel.Event.Interest
+        ) throws(Kernel.Event.Driver.Error) {
+            try polling.source.arm(id: id, interest: interest)
+        }
+
+        /// Remove and close one sender endpoint if its registration and exact
+        /// interest entry still exist. Dispatch, cancellation, arm rollback,
+        /// and shutdown can all win the race; later removals are no-ops.
+        private func remove(
+            _ sender: Async.Channel<Kernel.Event>.Unbounded.Sender,
+            from registrationID: Event.ID,
+            interest: Kernel.Event.Interest
+        ) {
+            guard var registration = registrations[registrationID] else { return }
+            registration.senders.remove(sender, for: interest)
+            registrations[registrationID] = registration
         }
 
         /// Create a per-call channel, enlist its sender on the matching
@@ -358,15 +392,22 @@
             // enlisting would hang the awaiter forever.
             guard state == .running else { throw .left(.shutdown) }
             var channel = Async.Channel<Kernel.Event>.Unbounded()
-            registrations[registrationID]?.senders.append(channel.sender, for: interest)
+            let sender = channel.sender
+            registrations[registrationID]?.senders.append(sender, for: interest)
 
-            arm(id: registrationID, interest: interest)
+            do throws(Kernel.Event.Driver.Error) {
+                try arm(id: registrationID, interest: interest)
+            } catch {
+                remove(sender, from: registrationID, interest: interest)
+                throw Event.Failure.right(Event.Error(error))
+            }
 
             let ends = (consume channel).take().ends()
             let received: Kernel.Event?
             do {
                 received = try await ends.receiver.receive()
             } catch {
+                remove(sender, from: registrationID, interest: interest)
                 throw Event.Failure.left(.cancelled)
             }
 

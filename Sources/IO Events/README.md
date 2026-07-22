@@ -472,12 +472,16 @@ lifecycle). This is the ownership lifecycle invariant (INV-2).
 
 ### Shutdown
 
-`IO.Event.Actor` does not expose shutdown — its lifetime follows its
-owners. The actor's `deinit` calls `polling.shutdown()`, which sets the
-halt flag, wakes the poll thread via `Kernel.Wakeup.Channel`, and joins
-(or detaches if called from the executor's own thread). The tick's
-`handle.actor` weak ref has already been nilled by Swift at the moment of
-deinit, so the next tick (if any) returns `.halt` immediately.
+`IO.Event.Actor.shutdown()` provides explicit owned teardown. The first
+call rejects new work, closes all enlisted waiters, clears both actor
+tables, and invokes `polling.shutdown()`; repeated calls are no-ops. The
+actor guards the Polling call because Polling does not promise general
+shutdown idempotence. `deinit` retains the same guarded call as a fallback
+for owners that do not shut down explicitly. Polling sets the halt flag,
+wakes the poll thread via `Kernel.Wakeup.Channel`, and joins (or detaches
+if called from the executor's own thread). Explicit actor shutdown stops
+the loop but does not destroy the retained Polling value: its owned event
+source closes only when the actor and Polling executor are released.
 
 ### Error mapping
 
