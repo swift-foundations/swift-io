@@ -15,14 +15,14 @@ import Span_Raw_Primitives
 import Testing
 
 extension Event.Actor {
-@Suite(
+    @Suite(
 
-    .disabled(
-        if: Toolchain.hasTaggedMetadataSIGSEGV,
-        "catalog §A9: Event.Actor() drives a real Kernel.Event.Driver whose registry is Dictionary<Kernel.Event.ID, Registration> (site 3, Kernel.Event.ID = Tagged<ISO_9945.Kernel.Event, UInt>); swift_getTypeByMangledName null-deref SIGSEGV on the first registry insert (register, via io.write/read/ready) on compiler(<6.4). Fixed on Swift 6.4+. See swift-institute/Issues/swift-issue-tagged-dictionary-insert-metadata-crash."
+        .disabled(
+            if: Toolchain.hasTaggedMetadataSIGSEGV,
+            "catalog §A9: Event.Actor() drives a real Kernel.Event.Driver whose registry is Dictionary<Kernel.Event.ID, Registration> (site 3, Kernel.Event.ID = Tagged<ISO_9945.Kernel.Event, UInt>); swift_getTypeByMangledName null-deref SIGSEGV on the first registry insert (register, via io.write/read/ready) on compiler(<6.4). Fixed on Swift 6.4+. See swift-institute/Issues/swift-issue-tagged-dictionary-insert-metadata-crash."
+        )
     )
-)
-struct Test {}
+    struct Test {}
 }
 
 // MARK: - Pipe round-trip
