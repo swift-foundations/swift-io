@@ -401,24 +401,13 @@
 
             let event: Kernel.Completion.Event? = await withTaskCancellationHandler {
                 // Stage 1: submit original + await original CQE.
-                let result: Kernel.Completion.Event? = await withCheckedContinuation {
-                    (c: CheckedContinuation<Kernel.Completion.Event?, Never>) in
-                    let entry = Completion.Entry(
-                        id: id,
-                        opcode: opcode,
-                        descriptor: consume descriptor,
-                        flag: flag,
-                        continuation: c
-                    )
-                    descriptor = nil
-                    do throws(Kernel.Completion.Error) {
-                        try self.submit(consume entry)
-                    } catch {
-                        // `submit` already called
-                        // `entry.resolveAsCancelled()` on failure, which
-                        // resumed the continuation.
-                    }
-                }
+                let result: Kernel.Completion.Event? = await self.awaitEvent(
+                    id: id,
+                    opcode: opcode,
+                    descriptor: consume descriptor,
+                    flag: flag
+                )
+                descriptor = nil
 
                 // Stage 2: if a cancel was submitted, wait for the cancel CQE too.
                 if coord.isCancelled {
@@ -443,6 +432,51 @@
                 throw .cancelled
             }
             return try mapEvent(event)
+        }
+
+        /// Stage 1 of the handshake: mint the entry, submit it, and await
+        /// its CQE.
+        ///
+        /// Hoisted out of ``submit(_:descriptor:mapEvent:)``'s
+        /// `withTaskCancellationHandler` body as a toolchain workaround for
+        /// swift-institute/Issues#111: on the Swift 6.4 release floor, a
+        /// `withCheckedContinuation` closure *nested inside* a
+        /// `withTaskCancellationHandler` operation closure, capturing and
+        /// consuming a `consuming` noncopyable-`Optional` parameter, aborts
+        /// swift-frontend under `-O` with `Type.h:232 'Cannot dereference a
+        /// null Type!'` while emitting IR. Hoisting the inner continuation
+        /// into its own function leaves one closure level per function and
+        /// lowers cleanly. Call-site spelling, guards, ownership transfer,
+        /// and handshake semantics are unchanged.
+        ///
+        /// Remove this hoist (inlining the body back into the cancellation
+        /// handler) once the pinned release-floor toolchain no longer
+        /// asserts — verify with a release build against the then-current
+        /// pinned image before landing the revert.
+        private func awaitEvent(
+            id: Kernel.Completion.Token,
+            opcode: Kernel.Completion.Submission.Opcode,
+            descriptor: consuming Kernel.Descriptor?,
+            flag: Completion.Cancellation
+        ) async -> Kernel.Completion.Event? {
+            await withCheckedContinuation {
+                (c: CheckedContinuation<Kernel.Completion.Event?, Never>) in
+                let entry = Completion.Entry(
+                    id: id,
+                    opcode: opcode,
+                    descriptor: consume descriptor,
+                    flag: flag,
+                    continuation: c
+                )
+                descriptor = nil
+                do throws(Kernel.Completion.Error) {
+                    try self.submit(consume entry)
+                } catch {
+                    // `submit` already called
+                    // `entry.resolveAsCancelled()` on failure, which
+                    // resumed the continuation.
+                }
+            }
         }
 
         /// Submit an `IORING_OP_ASYNC_CANCEL` for `targetID` and await its
