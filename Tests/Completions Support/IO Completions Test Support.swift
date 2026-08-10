@@ -18,14 +18,18 @@
     extension IO where Capabilities == Basic.Capabilities {
         /// Cross-platform completions test witness.
         ///
-        /// On Linux: `IO.completions()` (real io_uring).
+        /// On Linux: `IO.completions()` when io_uring is available,
+        /// otherwise `IO.events()` (epoll).
         /// On macOS/Darwin: `IO.events()` (kqueue).
         ///
         /// Tests using this factory exercise the same IO contract on both
         /// platforms, backed by the best available engine.
         public static func completionsTest() throws -> IO<Basic.Capabilities> {
             #if os(Linux)
-                return try Self.completions()
+                if Kernel.IO.Uring.isSupported {
+                    return try Self.completions()
+                }
+                return try Self.events()
             #else
                 return try Self.events()
             #endif
@@ -53,6 +57,7 @@
             private var _flushCount: Int = 0
             private var _isClosed: Bool = false
             private var _onSubmit: (@Sendable (Kernel.Completion.Submission) -> Kernel.Completion.Event?)? = nil
+            private var _response: (@Sendable (Kernel.Completion.Submission) -> [Kernel.Completion.Event])? = nil
             private var _started: Bool = true
 
             public init() {}
@@ -89,6 +94,16 @@
             set { sync.synchronize { _onSubmit = newValue } }
         }
 
+        /// Auto-generate zero or more CQEs when a submission arrives.
+        ///
+        /// This is the batch form of ``onSubmit``. When set, it takes
+        /// precedence so one submission can resolve a coordinated group,
+        /// such as an original operation and its cancellation request.
+        public var response: (@Sendable (Kernel.Completion.Submission) -> [Kernel.Completion.Event])? {
+            get { sync.synchronize { _response } }
+            set { sync.synchronize { _response = newValue } }
+        }
+
         // MARK: - Observables
 
         /// All submissions recorded.
@@ -104,6 +119,22 @@
         /// Whether `close()` has been called.
         public var isClosed: Bool {
             sync.synchronize { _isClosed }
+        }
+
+        /// Block until at least `count` submissions have been recorded.
+        public func wait(
+            for count: Int,
+            timeout: Duration = .seconds(5)
+        ) -> Bool {
+            let deadline = ContinuousClock.now.advanced(by: timeout)
+            sync.lock()
+            defer { sync.unlock() }
+            while _submissions.count < count {
+                let remaining = ContinuousClock.now.duration(to: deadline)
+                guard remaining > .zero else { return false }
+                _ = sync.wait(condition: 0, timeout: remaining)
+            }
+            return true
         }
 
         /// Block until `close()` has been called on the driver.
@@ -126,7 +157,9 @@
         func recordSubmission(_ submission: Kernel.Completion.Submission) {
             sync.synchronize {
                 _submissions.append(submission)
-                if let respond = _onSubmit, let event = respond(submission) {
+                if let respond = _response {
+                    _completions.append(contentsOf: respond(submission))
+                } else if let respond = _onSubmit, let event = respond(submission) {
                     _completions.append(event)
                 }
             }
