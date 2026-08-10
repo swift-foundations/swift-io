@@ -401,24 +401,13 @@
 
             let event: Kernel.Completion.Event? = await withTaskCancellationHandler {
                 // Stage 1: submit original + await original CQE.
-                let result: Kernel.Completion.Event? = await withCheckedContinuation {
-                    (c: CheckedContinuation<Kernel.Completion.Event?, Never>) in
-                    let entry = Completion.Entry(
-                        id: id,
-                        opcode: opcode,
-                        descriptor: consume descriptor,
-                        flag: flag,
-                        continuation: c
-                    )
-                    descriptor = nil
-                    do throws(Kernel.Completion.Error) {
-                        try self.submit(consume entry)
-                    } catch {
-                        // `submit` already called
-                        // `entry.resolveAsCancelled()` on failure, which
-                        // resumed the continuation.
-                    }
-                }
+                let result: Kernel.Completion.Event? = await awaitEvent(
+                    id: id,
+                    opcode: opcode,
+                    descriptor: consume descriptor,
+                    flag: flag
+                )
+                descriptor = nil
 
                 // Stage 2: if a cancel was submitted, wait for the cancel CQE too.
                 if coord.isCancelled {
@@ -443,6 +432,46 @@
                 throw .cancelled
             }
             return try mapEvent(event)
+        }
+
+        /// Stage 1 of the handshake: mint the entry, submit it, and await
+        /// its CQE.
+        ///
+        /// This is hoisted from ``submit(_:descriptor:mapEvent:)`` as a
+        /// workaround for swift-institute/Issues#111. Under `-O`, Swift 6.4
+        /// asserts in `Type.h:232` while emitting IR for a
+        /// `withCheckedContinuation` closure nested in a
+        /// `withTaskCancellationHandler` operation closure that captures and
+        /// consumes a noncopyable optional. The hoist leaves one closure
+        /// level per function while preserving the call-site spelling,
+        /// ownership transfer, and cancellation handshake.
+        ///
+        /// Reconsider the hoist only after the release-floor toolchain
+        /// compiles the nested source shape in a release build.
+        private func awaitEvent(
+            id: Kernel.Completion.Token,
+            opcode: Kernel.Completion.Submission.Opcode,
+            descriptor: consuming Kernel.Descriptor?,
+            flag: Completion.Cancellation
+        ) async -> Kernel.Completion.Event? {
+            await withCheckedContinuation {
+                (c: CheckedContinuation<Kernel.Completion.Event?, Never>) in
+                let entry = Completion.Entry(
+                    id: id,
+                    opcode: opcode,
+                    descriptor: consume descriptor,
+                    flag: flag,
+                    continuation: c
+                )
+                descriptor = nil
+                do throws(Kernel.Completion.Error) {
+                    try self.submit(consume entry)
+                } catch {
+                    // `submit` already called
+                    // `entry.resolveAsCancelled()` on failure, which
+                    // resumed the continuation.
+                }
+            }
         }
 
         /// Submit an `IORING_OP_ASYNC_CANCEL` for `targetID` and await its
