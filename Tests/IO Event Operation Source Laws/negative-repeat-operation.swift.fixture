@@ -5,7 +5,11 @@ func repeatOperation(
     on actor: Event.Actor,
     borrowing descriptor: borrowing Kernel.Descriptor,
     operation: sending (borrowing Kernel.Descriptor) -> Int
-) async throws(Event.Operation.Error<Never>) {
-    _ = try await actor.run(borrowing: descriptor, interest: .read, operation: operation)
-    _ = try await actor.run(borrowing: descriptor, interest: .read, operation: operation)
+) async throws(Event.Failure) {
+    let first: (IO<Never>.Operation<Int, Event.Wait.Error<Never>>, IO<Never>.Completion) =
+        try await actor.enlist(borrowing: descriptor, interest: .read, operation: operation)
+    let second: (IO<Never>.Operation<Int, Event.Wait.Error<Never>>, IO<Never>.Completion) =
+        try await actor.enlist(borrowing: descriptor, interest: .read, operation: operation)
+    _ = consume first
+    _ = consume second
 }

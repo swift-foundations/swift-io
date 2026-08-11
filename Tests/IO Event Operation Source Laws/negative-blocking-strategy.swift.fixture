@@ -1,8 +1,6 @@
 // Expected rejection: IO exposes no cancellable arbitrary-blocking operation.
 import IO
 
-func unavailable(
-    borrowing descriptor: borrowing Kernel.Descriptor
-) async throws(Event.Operation.Error<Never>) {
-    _ = try await IO.blocking.run(borrowing: descriptor) { _ in () }
+func unavailable(borrowing descriptor: borrowing Kernel.Descriptor) async {
+    _ = await IO<Never>.blocking.enlist(borrowing: descriptor) { _ in () }
 }
