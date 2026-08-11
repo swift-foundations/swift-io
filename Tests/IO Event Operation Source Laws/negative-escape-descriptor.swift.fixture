@@ -1,0 +1,11 @@
+// Expected rejection: the operation result cannot capture the borrowed descriptor.
+import IO_Events
+
+func escape(
+    on actor: Event.Actor,
+    borrowing descriptor: borrowing Kernel.Descriptor
+) async throws(Event.Operation.Error<Never>) -> sending (() -> Void) {
+    try await actor.run(borrowing: descriptor, interest: .read) { descriptor in
+        { _ = descriptor }
+    }
+}

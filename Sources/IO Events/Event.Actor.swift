@@ -68,7 +68,7 @@
             /// `nonisolated let`: single-assignment in init; readable from the
             /// nonisolated `unownedExecutor` accessor without isolation hops.
             /// Polling is `@unchecked Sendable` by construction.
-            nonisolated private let polling: Kernel.Thread.Executor.Polling
+            nonisolated package let polling: Kernel.Thread.Executor.Polling
 
             /// Lifecycle state. Internal (not fileprivate) so the
             /// lifecycle regression tests can observe the halt transition
@@ -405,7 +405,16 @@
             let ends = (consume channel).take().ends()
             let received: Kernel.Event?
             do {
-                received = try await ends.receiver.receive()
+                let wakeup = polling.source.wakeup
+                received = try await withTaskCancellationHandler {
+                    try await ends.receiver.receive()
+                } onCancel: {
+                    // The cancellation handler is the one genuinely concurrent
+                    // endpoint in this lifecycle. Kernel.Wakeup.Channel is
+                    // Sendable specifically so cancellation can interrupt the
+                    // source's blocking poll without an actor hop.
+                    wakeup.wake()
+                }
             } catch {
                 remove(sender, from: registrationID, interest: interest)
                 throw Event.Failure.left(.cancelled)
