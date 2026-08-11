@@ -23,19 +23,21 @@ factories on top of this package. Depend on `IO Events` or `IO Completions`
 directly only when a caller needs exactly one strategy rather than the
 host-adaptive choice.
 
-## Cancellable descriptor operations
+## Cancellable readiness
 
-`Event.Actor.run(borrowing:interest:operation:)` is the structured cancellable
-surface for descriptor readiness. It creates one exact event registration,
-wakes the event source on task cancellation, removes the exact waiter,
-deregisters, and physically joins the one-shot nonblocking attempt before the
-descriptor borrow ends. The caller may consume or close the descriptor only
-after the method returns.
+`Event.Actor.enlist(borrowing:interest:operation:)` is the Event strategy's smallest
+cross-package construction primitive. It returns the generic `IO.Operation`
+and result-free `IO.Completion` owners from IO Primitives. The actor creates one
+distinct owned event registration and ends the caller's descriptor borrow before
+returning. Cancellation closes that exact waiter and wakes the event source;
+completion is acknowledged only after exact removal and deregistration.
 
-The operation closure is `sending` and nonescaping. It is transferred once to
-`Kernel.Thread.run`; it is not `@Sendable` because no concurrent invocation is
-possible. Only the cancellation wake endpoint is `@Sendable`, as Swift task
-cancellation may invoke that endpoint concurrently with the event wait.
+The supplied sending operation runs once against a separately owned execution
+descriptor after readiness. Domain packages therefore retain their file,
+socket, or accept policy without extending the caller's descriptor borrow.
+Completion is signalled only after cancellation-before-admission or physical
+worker join and exact deregistration. The shared cancellation action is the
+only `@Sendable` closure; result and completion remain single-owner closures.
 
 There is deliberately no corresponding cancellable arbitrary-blocking syscall
 surface. Such a syscall has no generic wake law. Consumers choose the event or

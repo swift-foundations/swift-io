@@ -4,11 +4,14 @@ struct Output: ~Copyable {
     let value: Int
 }
 
-func run(
+func enlist(
     on actor: Event.Actor,
     borrowing descriptor: borrowing Kernel.Descriptor
-) async throws(Event.Operation.Error<Never>) -> sending Output {
-    try await actor.run(borrowing: descriptor, interest: .read) { _ in
+) async throws(Event.Failure) -> (
+    IO<Never>.Operation<Output, Event.Wait.Error<Never>>,
+    IO<Never>.Completion
+) {
+    try await actor.enlist(borrowing: descriptor, interest: .read) { _ in
         Output(value: 1)
     }
 }

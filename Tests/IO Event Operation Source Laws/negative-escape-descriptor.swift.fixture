@@ -4,8 +4,11 @@ import IO_Events
 func escape(
     on actor: Event.Actor,
     borrowing descriptor: borrowing Kernel.Descriptor
-) async throws(Event.Operation.Error<Never>) -> sending (() -> Void) {
-    try await actor.run(borrowing: descriptor, interest: .read) { descriptor in
+) async throws(Event.Failure) -> (
+    IO<Never>.Operation<() -> Void, Event.Wait.Error<Never>>,
+    IO<Never>.Completion
+) {
+    try await actor.enlist(borrowing: descriptor, interest: .read) { descriptor in
         { _ = descriptor }
     }
 }

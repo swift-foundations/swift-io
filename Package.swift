@@ -44,7 +44,10 @@ let package = Package(
         .package(url: "https://github.com/swift-foundations/swift-executors.git", branch: "main"),
         .package(url: "https://github.com/swift-foundations/swift-threads.git", branch: "main"),
         .package(url: "https://github.com/swift-foundations/swift-synchronizers.git", branch: "main"),
-        .package(url: "https://github.com/swift-primitives/swift-io-primitives.git", branch: "main"),
+        .package(
+            url: "https://github.com/swift-primitives/swift-io-primitives.git",
+            revision: "5ae3447ce22f04977aec86486fcd1a77682ecab0"
+        ),
         .package(url: "https://github.com/swift-primitives/swift-buffer-primitives.git", branch: "main"),
         .package(url: "https://github.com/swift-primitives/swift-hash-primitives.git", branch: "main"),
         .package(url: "https://github.com/swift-primitives/swift-heap-primitives.git", branch: "main"),
