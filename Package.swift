@@ -38,7 +38,7 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/swift-foundations/swift-kernel.git",
-            revision: "6d197382a118f06f9c799deea515fb511c207162"
+            branch: "main"
         ),
         .package(url: "https://github.com/swift-foundations/swift-async.git", branch: "main"),
         .package(url: "https://github.com/swift-foundations/swift-executors.git", branch: "main"),
@@ -46,7 +46,7 @@ let package = Package(
         .package(url: "https://github.com/swift-foundations/swift-synchronizers.git", branch: "main"),
         .package(
             url: "https://github.com/swift-primitives/swift-io-primitives.git",
-            revision: "5ae3447ce22f04977aec86486fcd1a77682ecab0"
+            branch: "main"
         ),
         .package(url: "https://github.com/swift-primitives/swift-buffer-primitives.git", branch: "main"),
         .package(url: "https://github.com/swift-primitives/swift-hash-primitives.git", branch: "main"),
