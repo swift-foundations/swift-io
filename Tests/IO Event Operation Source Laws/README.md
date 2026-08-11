@@ -13,6 +13,8 @@ They are documentation inputs, not an executable test target.
   cancellable blocking-strategy overload.
 - `positive-independent-cancellation.swift.fixture` records that cancellation
   is reachable without consuming the result owner.
+- `positive-move-only.swift.fixture` also records synchronous nonisolated owner
+  publication: its admission function is not async and contains no await.
 - `positive-close-ordering.swift.fixture` records that release consumes the
   result-free Completion before consuming the original descriptor.
 

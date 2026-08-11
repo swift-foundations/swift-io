@@ -26,10 +26,12 @@ host-adaptive choice.
 ## Cancellable readiness
 
 `Event.Actor.enlist(borrowing:interest:operation:)` is the Event strategy's smallest
-cross-package construction primitive. It returns the generic `IO.Operation`
+cross-package construction primitive. It is nonisolated and returns the generic `IO.Operation`
 and result-free `IO.Completion` owners from IO Primitives. The actor creates one
 distinct owned event registration and ends the caller's descriptor borrow before
-returning. Cancellation closes that exact waiter and wakes the event source;
+returning, before the caller can yield or reenter. A thread-safe Event-owned
+queue transfers the already-owned request to the polling actor. Cancellation
+may win before actor admission; it closes that exact waiter and wakes the event source;
 completion is acknowledged only after exact removal and deregistration.
 
 The supplied sending operation runs once against a separately owned execution
