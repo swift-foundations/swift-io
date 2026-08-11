@@ -24,7 +24,7 @@
 // gates Polling !os(Windows)). Gated whole-file to match the IO Completions
 // posture; the Windows leg uses the blocking path per IO+File.System+Default.
 #if !os(Windows)
-    @_spi(Syscall) import Kernel
+    import Kernel
     import Executors
     import Async
     import Memory_Primitives

@@ -38,7 +38,7 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/swift-foundations/swift-kernel.git",
-            revision: "046fa8659caa9c11b8aedfa83b88f308eab17e7a"
+            revision: "6d197382a118f06f9c799deea515fb511c207162"
         ),
         .package(url: "https://github.com/swift-foundations/swift-async.git", branch: "main"),
         .package(url: "https://github.com/swift-foundations/swift-executors.git", branch: "main"),

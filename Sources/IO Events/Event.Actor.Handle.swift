@@ -30,13 +30,13 @@
         ///
         /// ## Safety Invariant
         ///
-        /// `@unsafe @unchecked Sendable` (Category A per MEM-SAFE-024):
+        /// `@unchecked Sendable` (Category A per MEM-SAFE-024):
         /// synchronized by the runtime's atomic weak-reference machinery.
         /// `weak var` cannot be `let` (the runtime must zero it on
         /// deallocation). The only write happens at the tail of
         /// `Actor.init`, sequenced-before the Polling thread can observe
         /// any tick; subsequent reads use Swift's atomic weak-ref.
-        internal final class Handle: @unsafe @unchecked Sendable {
+        internal final class Handle: @unchecked Sendable {
             weak var actor: Event.Actor?
 
             init() {}
