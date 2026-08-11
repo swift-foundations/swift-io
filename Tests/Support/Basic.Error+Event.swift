@@ -7,39 +7,43 @@
 //  about Basic.Error.
 //
 
-public import IO_Events
+#if !os(Windows)
 
-extension Event.Failure {
-    /// Map a reactor failure onto the fd-generic ``Basic/Error``.
-    @usableFromInline
-    package var basicError: Basic.Error {
-        switch self {
-        case .left(.cancelled):
-            return .cancelled
+    public import IO_Events
 
-        case .left(.shutdown):
-            return .shutdown
+    extension Event.Failure {
+        /// Map a reactor failure onto the fd-generic ``Basic/Error``.
+        @usableFromInline
+        package var basicError: Basic.Error {
+            switch self {
+            case .left(.cancelled):
+                return .cancelled
 
-        case .left(.timeout):
-            return .timeout
+            case .left(.shutdown):
+                return .shutdown
 
-        case .right(let eventError):
-            switch eventError {
-            case .platform(let code):
-                return .platform(code)
+            case .left(.timeout):
+                return .timeout
 
-            case .invalidDescriptor:
-                return .platform(.POSIX.EBADF)
+            case .right(let eventError):
+                switch eventError {
+                case .platform(let code):
+                    return .platform(code)
 
-            case .alreadyRegistered, .notRegistered, .deregistered:
-                return .platform(.POSIX.EINVAL)
+                case .invalidDescriptor:
+                    return .platform(.POSIX.EBADF)
 
-            case .readClosed, .writeClosed:
-                return .brokenPipe
+                case .alreadyRegistered, .notRegistered, .deregistered:
+                    return .platform(.POSIX.EINVAL)
 
-            case .notConnected:
-                return .platform(.POSIX.EINVAL)
+                case .readClosed, .writeClosed:
+                    return .brokenPipe
+
+                case .notConnected:
+                    return .platform(.POSIX.EINVAL)
+                }
             }
         }
     }
-}
+
+#endif

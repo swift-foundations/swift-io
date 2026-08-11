@@ -42,7 +42,9 @@ struct Test {
         // for EAGAIN-armed retry; the default may or may not land on
         // events, but setting non-blocking is harmless under blocking
         // and completions.
-        try? Kernel.File.Control.setNonBlocking(pipe.read)
+        #if !os(Windows)
+            try? Kernel.File.Control.setNonBlocking(pipe.read)
+        #endif
 
         let payload: [UInt8] = [0xDE, 0xAD, 0xBE, 0xEF]
         let writePtr = unsafe UnsafeMutableRawBufferPointer.allocate(

@@ -2,6 +2,23 @@
 
 import PackageDescription
 
+let eventsTests: [Target] = {
+    #if os(Windows)
+    []
+    #else
+    [
+        .testTarget(
+            name: "IO Events Tests",
+            dependencies: [
+                "IO Events",
+                "IO Test Support",
+                .product(name: "Heap Primitive", package: "swift-heap-primitives"),
+            ]
+        ),
+    ]
+    #endif
+}()
+
 let package = Package(
     name: "swift-io",
     platforms: [
@@ -147,14 +164,6 @@ let package = Package(
             path: "Tests/IO Blocking Tests"
         ),
         .testTarget(
-            name: "IO Events Tests",
-            dependencies: [
-                "IO Events",
-                "IO Test Support",
-                .product(name: "Heap Primitive", package: "swift-heap-primitives"),
-            ]
-        ),
-        .testTarget(
             name: "IO Completions Tests",
             dependencies: [
                 "IO Completions",
@@ -170,7 +179,7 @@ let package = Package(
         ),
         // Benchmarks moved to Benchmarks/io-bench/ (nested package with swift-testing .timed())
         // Run: cd Benchmarks/io-bench && swift test
-    ]
+    ] + eventsTests
 )
 
 for target in package.targets where ![.system, .binary, .plugin, .macro].contains(target.type) {

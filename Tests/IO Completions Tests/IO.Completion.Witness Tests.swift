@@ -3,9 +3,9 @@
 //  swift-io
 //
 //  Cross-platform witness-level integration tests for IO Completions.
-//  Uses IO.completionsTest() — real io_uring on Linux, kqueue on macOS.
-//  Every test does real pipe I/O through the IO witness; the backend
-//  is opaque.
+//  Uses IO.completionsTest() — real io_uring when the Linux host permits
+//  it, epoll otherwise, and kqueue on macOS. Every integration test does
+//  real pipe I/O through the IO witness; the backend is opaque.
 //
 
 #if !os(Windows)
@@ -133,37 +133,49 @@
                 }
             }
 
-            // Cancel handshake requires real kernel to produce -ECANCELED CQE.
-            #if os(Linux)
-                @Suite struct `Cancel Handshake` {
+            @Suite struct `Cancel Handshake` {
 
-                    @Test func `read on empty pipe returns after cancel CQEs`() async throws {
-                        let io = try IO.completionsTest()
-
-                        let task = Task {
-                            let pipe = try Kernel.Pipe.pipe()
-                            let readPtr = UnsafeMutableRawBufferPointer.allocate(
-                                byteCount: 16,
-                                alignment: 1
-                            )
-                            defer { unsafe readPtr.deallocate() }
-                            return try await io.read(
-                                from: pipe.read,
-                                into: unsafe .init(readPtr)
-                            )
+                @Test(.timeLimit(.minutes(1)))
+                func `read returns only after original and cancel CQEs`() async throws {
+                    let (actor, backend) = Completion.Actor.fake()
+                    backend.response = { submission in
+                        guard case .cancel(let target) = submission.opcode else {
+                            return []
                         }
+                        return [
+                            Kernel.Completion.Event(
+                                token: target,
+                                result: .init(rawValue: 0)
+                            ),
+                            Kernel.Completion.Event(
+                                token: submission.token,
+                                result: .init(rawValue: 0)
+                            ),
+                        ]
+                    }
+                    let io = IO.completions(on: actor)
 
-                        try await Task.sleep(for: .milliseconds(10))
-                        task.cancel()
+                    let task = Task {
+                        let pipe = try Kernel.Pipe.pipe()
+                        let readPtr = UnsafeMutableRawBufferPointer.allocate(
+                            byteCount: 16,
+                            alignment: 1
+                        )
+                        defer { unsafe readPtr.deallocate() }
+                        return try await io.read(
+                            from: pipe.read,
+                            into: unsafe .init(readPtr)
+                        )
+                    }
 
-                        do {
-                            _ = try await task.value
-                        } catch {
-                            _ = error
-                        }
+                    #expect(backend.wait(for: 1, timeout: .seconds(2)))
+                    task.cancel()
+
+                    await #expect(throws: Basic.Error.cancelled) {
+                        _ = try await task.value
                     }
                 }
-            #endif
+            }
         }
     }
 

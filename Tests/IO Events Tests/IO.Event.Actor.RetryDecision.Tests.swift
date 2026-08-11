@@ -39,18 +39,9 @@ extension Event.Actor.RetryDecision.Test.Unit {
     }
 
     @Test
-    func `EAGAIN is classified as retry (Linux value 11)`() {
+    func `EAGAIN is classified as retry`() {
         let decision = Event.Actor.RetryDecision(
-            for: .platform(.posix(Int32(11)))
-        )
-        #expect(decision == .retry)
-    }
-
-    @Test
-    func `EAGAIN is classified as retry (Darwin value 35)`() {
-        // Darwin: EAGAIN == 35; on Linux posix(35) is EUCLEAN (fatal).
-        let decision = Event.Actor.RetryDecision(
-            for: .platform(.posix(Int32(35)))
+            for: .platform(.POSIX.EAGAIN)
         )
         #expect(decision == .retry)
     }

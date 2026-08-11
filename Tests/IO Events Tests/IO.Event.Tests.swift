@@ -6,7 +6,6 @@
 //
 
 import IO_Events
-import IO_Test_Support
 import Testing
 
 extension Event {
