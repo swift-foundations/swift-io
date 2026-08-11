@@ -1,0 +1,14 @@
+import IO_Events
+
+struct Output: ~Copyable {
+    let value: Int
+}
+
+func run(
+    on actor: Event.Actor,
+    borrowing descriptor: borrowing Kernel.Descriptor
+) async throws(Event.Operation.Error<Never>) -> sending Output {
+    try await actor.run(borrowing: descriptor, interest: .read) { _ in
+        Output(value: 1)
+    }
+}

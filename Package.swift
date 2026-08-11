@@ -36,7 +36,10 @@ let package = Package(
         .library(name: "IO Completions Test Support", targets: ["IO Completions Test Support"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/swift-foundations/swift-kernel.git", branch: "main"),
+        .package(
+            url: "https://github.com/swift-foundations/swift-kernel.git",
+            revision: "046fa8659caa9c11b8aedfa83b88f308eab17e7a"
+        ),
         .package(url: "https://github.com/swift-foundations/swift-async.git", branch: "main"),
         .package(url: "https://github.com/swift-foundations/swift-executors.git", branch: "main"),
         .package(url: "https://github.com/swift-foundations/swift-threads.git", branch: "main"),
