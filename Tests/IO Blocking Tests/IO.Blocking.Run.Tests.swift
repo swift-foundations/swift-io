@@ -16,7 +16,10 @@ struct IOBlockingRunTests {
         let pipe = try Kernel.Pipe.pipe()
 
         let message: [UInt8] = [72, 101, 108, 108, 111]  // "Hello"
-        let writePtr = unsafe UnsafeMutableRawBufferPointer.allocate(byteCount: message.count, alignment: 1)
+        let writePtr = unsafe UnsafeMutableRawBufferPointer.allocate(
+            byteCount: message.count,
+            alignment: 1
+        )
         defer { writePtr.deallocate() }
         unsafe writePtr.copyBytes(from: message)
         let writeBuffer: Span.Raw = unsafe .init(UnsafeRawBufferPointer(writePtr))
@@ -44,7 +47,10 @@ struct IOBlockingRunTests {
                     let io = IO.blocking()
                     let pipe = try Kernel.Pipe.pipe()
 
-                    let ptr = unsafe UnsafeMutableRawBufferPointer.allocate(byteCount: 1, alignment: 1)
+                    let ptr = unsafe UnsafeMutableRawBufferPointer.allocate(
+                        byteCount: 1,
+                        alignment: 1
+                    )
                     defer { ptr.deallocate() }
                     unsafe ptr[0] = 42
                     let writeBuf: Span.Raw = unsafe .init(UnsafeRawBufferPointer(ptr))
@@ -72,7 +78,10 @@ struct IOBlockingRunTests {
                     let io = IO.blocking()
                     let pipe = try Kernel.Pipe.pipe()
 
-                    let ptr = unsafe UnsafeMutableRawBufferPointer.allocate(byteCount: 1, alignment: 1)
+                    let ptr = unsafe UnsafeMutableRawBufferPointer.allocate(
+                        byteCount: 1,
+                        alignment: 1
+                    )
                     defer { ptr.deallocate() }
                     unsafe ptr[0] = 1
                     let writeBuf: Span.Raw = unsafe .init(UnsafeRawBufferPointer(ptr))

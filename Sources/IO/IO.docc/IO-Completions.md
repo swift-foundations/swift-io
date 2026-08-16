@@ -1,6 +1,6 @@
 # IO Completions
 
-The **proactor** strategy of swift-io. One OS thread submits operations
+The swift-io **proactor** strategy. One OS thread submits operations
 to the kernel and reaps completions. A single `IO.completions(on:)`
 factory turns that thread into a platform-agnostic `IO` witness.
 

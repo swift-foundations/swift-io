@@ -177,8 +177,6 @@ let package = Package(
                 "IO Test Support",
             ]
         ),
-        // Benchmarks moved to Benchmarks/io-bench/ (nested package with swift-testing .timed())
-        // Run: cd Benchmarks/io-bench && swift test
     ] + eventsTests
 )
 

@@ -28,7 +28,10 @@ extension Event.Fake {
             let controller = Event.Fake.Controller()
             var source = Event.Fake.make(controller: controller)
 
-            let id = try source.register(descriptor: Kernel.Descriptor(_rawValue: -42), interest: .read)
+            let id = try source.register(
+                descriptor: Kernel.Descriptor(_rawValue: -42),
+                interest: .read
+            )
 
             let registration = controller.registration(for: id)
             #expect(registration != nil)
@@ -41,7 +44,10 @@ extension Event.Fake {
             let controller = Event.Fake.Controller()
             var source = Event.Fake.make(controller: controller)
 
-            let id = try source.register(descriptor: Kernel.Descriptor(_rawValue: -10), interest: [.read, .write])
+            let id = try source.register(
+                descriptor: Kernel.Descriptor(_rawValue: -10),
+                interest: [.read, .write]
+            )
 
             let registration = controller.registration(for: id)
             #expect(registration?.interest.contains(.read) == true)
@@ -53,9 +59,18 @@ extension Event.Fake {
             let controller = Event.Fake.Controller()
             var source = Event.Fake.make(controller: controller)
 
-            let id1 = try source.register(descriptor: Kernel.Descriptor(_rawValue: -1), interest: .read)
-            let id2 = try source.register(descriptor: Kernel.Descriptor(_rawValue: -2), interest: .read)
-            let id3 = try source.register(descriptor: Kernel.Descriptor(_rawValue: -3), interest: .read)
+            let id1 = try source.register(
+                descriptor: Kernel.Descriptor(_rawValue: -1),
+                interest: .read
+            )
+            let id2 = try source.register(
+                descriptor: Kernel.Descriptor(_rawValue: -2),
+                interest: .read
+            )
+            let id3 = try source.register(
+                descriptor: Kernel.Descriptor(_rawValue: -3),
+                interest: .read
+            )
 
             #expect(id1 != id2)
             #expect(id2 != id3)
@@ -69,7 +84,10 @@ extension Event.Fake {
             let controller = Event.Fake.Controller()
             var source = Event.Fake.make(controller: controller)
 
-            let id = try source.register(descriptor: Kernel.Descriptor(_rawValue: -42), interest: .read)
+            let id = try source.register(
+                descriptor: Kernel.Descriptor(_rawValue: -42),
+                interest: .read
+            )
             try source.modify(id: id, interest: .write)
 
             let registration = controller.registration(for: id)
@@ -81,7 +99,10 @@ extension Event.Fake {
             let controller = Event.Fake.Controller()
             var source = Event.Fake.make(controller: controller)
 
-            let id = try source.register(descriptor: Kernel.Descriptor(_rawValue: -42), interest: .read)
+            let id = try source.register(
+                descriptor: Kernel.Descriptor(_rawValue: -42),
+                interest: .read
+            )
             try source.modify(id: id, interest: [.read, .write])
 
             let registration = controller.registration(for: id)
@@ -94,7 +115,10 @@ extension Event.Fake {
             let controller = Event.Fake.Controller()
             var source = Event.Fake.make(controller: controller)
 
-            let id = try source.register(descriptor: Kernel.Descriptor(_rawValue: -42), interest: [.read, .write])
+            let id = try source.register(
+                descriptor: Kernel.Descriptor(_rawValue: -42),
+                interest: [.read, .write]
+            )
             try source.modify(id: id, interest: .read)
 
             let registration = controller.registration(for: id)
@@ -120,7 +144,10 @@ extension Event.Fake {
             let controller = Event.Fake.Controller()
             var source = Event.Fake.make(controller: controller)
 
-            let id = try source.register(descriptor: Kernel.Descriptor(_rawValue: -42), interest: .read)
+            let id = try source.register(
+                descriptor: Kernel.Descriptor(_rawValue: -42),
+                interest: .read
+            )
             #expect(controller.isRegistered(id) == true)
 
             try source.deregister(id: id)
@@ -132,7 +159,10 @@ extension Event.Fake {
             let controller = Event.Fake.Controller()
             var source = Event.Fake.make(controller: controller)
 
-            let id = try source.register(descriptor: Kernel.Descriptor(_rawValue: -42), interest: .read)
+            let id = try source.register(
+                descriptor: Kernel.Descriptor(_rawValue: -42),
+                interest: .read
+            )
             try source.deregister(id: id)
             try source.deregister(id: id)  // Should not throw
 
@@ -155,7 +185,10 @@ extension Event.Fake {
             let controller = Event.Fake.Controller()
             var source = Event.Fake.make(controller: controller)
 
-            let id = try source.register(descriptor: Kernel.Descriptor(_rawValue: -42), interest: .read)
+            let id = try source.register(
+                descriptor: Kernel.Descriptor(_rawValue: -42),
+                interest: .read
+            )
 
             // Push event, then deregister before poll
             controller.pushEvent(Kernel.Event(id: id, interest: .read, flags: []))
@@ -176,7 +209,10 @@ extension Event.Fake {
             let controller = Event.Fake.Controller()
             var source = Event.Fake.make(controller: controller)
 
-            let id = try source.register(descriptor: Kernel.Descriptor(_rawValue: -42), interest: .read)
+            let id = try source.register(
+                descriptor: Kernel.Descriptor(_rawValue: -42),
+                interest: .read
+            )
 
             controller.pushEvent(Kernel.Event(id: id, interest: .read, flags: []))
 
@@ -196,8 +232,14 @@ extension Event.Fake {
             let controller = Event.Fake.Controller()
             var source = Event.Fake.make(controller: controller)
 
-            let id1 = try source.register(descriptor: Kernel.Descriptor(_rawValue: -1), interest: .read)
-            let id2 = try source.register(descriptor: Kernel.Descriptor(_rawValue: -2), interest: .write)
+            let id1 = try source.register(
+                descriptor: Kernel.Descriptor(_rawValue: -1),
+                interest: .read
+            )
+            let id2 = try source.register(
+                descriptor: Kernel.Descriptor(_rawValue: -2),
+                interest: .write
+            )
 
             controller.pushEvents([
                 Kernel.Event(id: id1, interest: .read, flags: []),
@@ -265,7 +307,10 @@ extension Event.Fake {
         func `simulated shutdown rejects modify`() throws {
             let controller = Event.Fake.Controller()
             var source = Event.Fake.make(controller: controller)
-            let id = try source.register(descriptor: Kernel.Descriptor(_rawValue: -42), interest: .read)
+            let id = try source.register(
+                descriptor: Kernel.Descriptor(_rawValue: -42),
+                interest: .read
+            )
 
             controller.simulateShutdown()
 

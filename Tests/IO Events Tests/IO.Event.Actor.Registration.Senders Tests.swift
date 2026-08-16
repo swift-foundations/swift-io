@@ -19,7 +19,9 @@ extension Event.Actor.Registration.Senders {
 
 extension Event.Actor.Registration.Senders.Test.Unit {
     @Test
-    func `remove closes only the exact sender and preserves ordered survivors`() async throws(Async.Channel<Kernel.Event>.Error) {
+    func `remove closes only the exact sender and preserves ordered survivors`() async throws(Async
+        .Channel<Kernel.Event>.Error)
+    {
         var firstChannel = Async.Channel<Kernel.Event>.Unbounded()
         let firstSender = firstChannel.sender
         let firstEnds = (consume firstChannel).take().ends()

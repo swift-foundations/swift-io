@@ -1,6 +1,6 @@
 # IO Events
 
-The **reactor** strategy of swift-io. One OS thread multiplexes Swift
+The swift-io **reactor** strategy. One OS thread multiplexes Swift
 concurrency jobs, kernel readiness polling, and event dispatch. A single
 `IO.events(on:)` factory turns that thread into a platform-agnostic `IO`
 witness.

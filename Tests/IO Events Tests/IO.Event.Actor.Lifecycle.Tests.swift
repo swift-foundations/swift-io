@@ -152,7 +152,9 @@ extension Event.Actor.`Edge Case` {
         }
 
         @Test(.timeLimit(.minutes(1)))
-        func `cancelled wait removes only its sender and preserves a same-interest survivor`() async throws {
+        func `cancelled wait removes only its sender and preserves a same-interest survivor`()
+            async throws
+        {
             let controller = Event.Fake.Controller()
             let actor = Event.Actor(source: Event.Fake.make(controller: controller))
             let pipe = try Kernel.Pipe.pipe()

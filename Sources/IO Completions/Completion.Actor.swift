@@ -165,7 +165,9 @@
         /// `Buffer` is fully qualified to `Buffer_Primitive.Buffer`: this
         /// target imports `Kernel_Completion`, whose `Kernel.Completion.Buffer`
         /// (non-generic) otherwise shadows the generic column buffer.
-        private typealias Registry = Dictionary_Primitives.Dictionary<Kernel.Completion.Token, Completion.Entry>
+        private typealias Registry = Dictionary_Primitives.Dictionary<
+            Kernel.Completion.Token, Completion.Entry
+        >
     }
 
     // MARK: - Tick: Outcome init from actor handle + wait thunk
