@@ -1,0 +1,6 @@
+// Expected rejection: IO exposes no cancellable arbitrary-blocking operation.
+import IO
+
+func unavailable(borrowing descriptor: borrowing Kernel.Descriptor) async {
+    _ = await IO<Never>.blocking.enlist(borrowing: descriptor) { _ in () }
+}

@@ -24,7 +24,7 @@
 // gates Polling !os(Windows)). Gated whole-file to match the IO Completions
 // posture; the Windows leg uses the blocking path per IO+File.System+Default.
 #if !os(Windows)
-    @_spi(Syscall) import Kernel
+    import Kernel
     import Executors
     import Async
     import Memory_Primitives
@@ -68,7 +68,7 @@
             /// `nonisolated let`: single-assignment in init; readable from the
             /// nonisolated `unownedExecutor` accessor without isolation hops.
             /// Polling is `@unchecked Sendable` by construction.
-            nonisolated private let polling: Kernel.Thread.Executor.Polling
+            nonisolated package let polling: Kernel.Thread.Executor.Polling
 
             /// Lifecycle state. Internal (not fileprivate) so the
             /// lifecycle regression tests can observe the halt transition
@@ -81,6 +81,13 @@
 
             /// Active registrations for direct event dispatch.
             var registrations: [Event.ID: Registration] = [:]
+
+            /// Independently cancellable one-shot readiness registrations.
+            private var waits: [Event.ID: Event.Wait.State] = [:]
+
+            /// Thread-safe pre-isolation admission queue. Domain actors publish
+            /// their lifecycle owners before this actor observes the request.
+            nonisolated private let admissions = Event.Wait.Admissions()
 
             /// Guards the actor-owned Polling shutdown call. Polling documents
             /// shutdown as non-idempotent, so every actor lifecycle path must
@@ -267,6 +274,8 @@
         /// `isIsolatingCurrentContext()` override which verifies the tick
         /// runs on the executor's thread.
         fileprivate func dispatch(_ events: UnsafeBufferPointer<Kernel.Event>) {
+            admitWaits()
+            finishCancelledWaits()
             for event in unsafe events {
                 guard var registration = registrations[event.id] else { continue }
                 registration.senders.drain(event: event, for: .read)
@@ -286,9 +295,24 @@
         fileprivate func cleanup() {
             guard state == .running else { return }
             state = .shuttingDown
+            for wait in admissions.close() {
+                reject(wait, failure: .left(.shutdown))
+            }
             for (_, registration) in registrations {
                 registration.senders.closeAll()
             }
+            let enlisted = waits
+            for (id, wait) in enlisted {
+                wait.cancel()
+                guard let execution = wait.claim() else { continue }
+                discard execution
+                let _: Result<Void, Event.Wait.Error<Never>> = finish(
+                    wait,
+                    id: id,
+                    outcome: .failure(.event(.left(.shutdown)))
+                )
+            }
+            waits.removeAll()
             registrations.removeAll()
             registeredIDs.removeAll()
         }
@@ -312,6 +336,193 @@
     // MARK: - Registration
 
     extension Event.Actor {
+
+        /// Enlists one independently cancellable readiness wait.
+        ///
+        /// The event strategy owns a distinct duplicated registration resource;
+        /// it never retains the caller's descriptor borrow. Cancellation closes
+        /// the exact waiter and wakes the polling source. The accompanying
+        /// completion acknowledgement becomes ready only after the actor has
+        /// removed the waiter and deregistered that owned resource.
+        ///
+        /// Domain packages compose this primitive into their own capabilities.
+        /// It performs no domain syscall and carries no domain policy.
+        nonisolated public func enlist<
+            Capabilities: Sendable,
+            Output: ~Copyable,
+            Failure: Swift.Error
+        >(
+            borrowing descriptor: borrowing Kernel.Descriptor,
+            interest: Kernel.Event.Interest,
+            operation: sending (borrowing Kernel.Descriptor) throws(Failure) -> sending Output
+        ) throws(Event.Failure) -> (
+            operation: IO<Capabilities>.Operation<Output, Event.Wait.Error<Failure>>,
+            completion: IO<Capabilities>.Completion
+        ) {
+            let registered: Kernel.Descriptor
+            let execution: Kernel.Descriptor
+            do throws(Kernel.Descriptor.Duplicate.Error) {
+                registered = try Kernel.Descriptor.Duplicate.duplicate(descriptor)
+                execution = try Kernel.Descriptor.Duplicate.duplicate(descriptor)
+            } catch {
+                switch error {
+                case .handle: throw .right(.invalidDescriptor)
+                case .tooManyOpen: throw .right(.platform(.POSIX.EMFILE))
+                case .platform(let failure): throw .right(.platform(failure.code))
+                }
+            }
+
+            var readiness = Async.Channel<Kernel.Event>.Unbounded()
+            let readinessEnds = (consume readiness).take().ends()
+            var completion = Async.Channel<Void>.Unbounded()
+            let completionEnds = (consume completion).take().ends()
+            let wait = Event.Wait.State(
+                registration: consume registered,
+                execution: consume execution,
+                interest: interest,
+                readiness: readinessEnds.sender,
+                completion: completionEnds.sender
+            )
+
+            let wakeup = polling.source.wakeup
+            // swift-linter:disable:next sendable sharing requirement
+            // REASON: CATEGORY: concurrent-cancellation; SHARING: Listener.release and the sole operation owner may invoke this idempotent endpoint concurrently.
+            let cancellation = IO<Capabilities>.Cancellation {
+                wait.cancel()
+                wakeup.wake()
+            }
+
+            if admissions.append(wait) {
+                wakeup.wake()
+            } else {
+                wait.fail(.left(.shutdown))
+                wait.readiness.close()
+                if let registration = wait.claimRegistration() { discard registration }
+                if let execution = wait.claim() { discard execution }
+                wait.complete()
+            }
+
+            return IO<Capabilities>.Operation<Output, Event.Wait.Error<Failure>>.start(
+                cancellation: cancellation,
+                result: {
+                    let event = try await readinessEnds.receiver.receive()
+                    guard let event, let execution = wait.claim() else {
+                        throw Event.Wait.Error<Failure>.event(
+                            wait.failure ?? .left(.cancelled)
+                        )
+                    }
+
+                    let outcome: Result<Output, Event.Wait.Error<Failure>>
+                    do throws(Kernel.Thread.Run.Error<Failure>) {
+                        outcome = .success(try Kernel.Thread.run(execution, operation))
+                    } catch {
+                        switch error {
+                        case .creation(let failure), .join(let failure):
+                            outcome = .failure(.thread(failure))
+                        case .operation(let failure):
+                            outcome = .failure(.operation(failure))
+                        }
+                    }
+                    return try await self.finish(
+                        wait,
+                        id: event.id,
+                        outcome: consume outcome
+                    ).get()
+                },
+                completion: {
+                    do throws(Async.Channel<Void>.Error) {
+                        _ = try await completionEnds.receiver.receive()
+                    } catch {}
+                }
+            )
+        }
+
+        /// Moves synchronously published requests onto the polling actor.
+        private func admitWaits() {
+            for wait in admissions.drain() {
+                guard state == .running else {
+                    reject(wait, failure: .left(.shutdown))
+                    continue
+                }
+                guard !wait.isCancelled else {
+                    reject(wait, failure: .left(.cancelled))
+                    continue
+                }
+                guard let registration = wait.claimRegistration() else {
+                    reject(wait, failure: .left(.cancelled))
+                    continue
+                }
+
+                let id: Event.ID
+                do throws(Kernel.Event.Driver.Error) {
+                    id = try polling.source.register(
+                        descriptor: consume registration,
+                        interest: wait.interest
+                    )
+                } catch {
+                    reject(wait, failure: .right(Event.Error(error)))
+                    continue
+                }
+
+                registrations[id] = Registration()
+                registrations[id]?.senders.append(wait.readiness, for: wait.interest)
+                waits[id] = wait
+                do throws(Kernel.Event.Driver.Error) {
+                    try arm(id: id, interest: wait.interest)
+                } catch {
+                    wait.fail(.right(Event.Error(error)))
+                    let _: Result<Void, Event.Wait.Error<Never>> = finish(
+                        wait,
+                        id: id,
+                        outcome: .failure(.event(.right(Event.Error(error))))
+                    )
+                }
+            }
+        }
+
+        /// Rejects a request before it owns a driver registration.
+        private func reject(_ wait: Event.Wait.State, failure: Event.Failure) {
+            wait.fail(failure)
+            wait.readiness.close()
+            if let registration = wait.claimRegistration() { discard registration }
+            if let execution = wait.claim() { discard execution }
+            wait.complete()
+        }
+
+        /// Completes one exact wait at most once and returns its terminal result.
+        private func finish<Output: ~Copyable, Failure: Swift.Error>(
+            _ wait: Event.Wait.State,
+            id: Event.ID,
+            outcome: consuming Result<Output, Event.Wait.Error<Failure>>
+        ) -> sending Result<Output, Event.Wait.Error<Failure>> {
+            if let registration = registrations.removeValue(forKey: id) {
+                registration.senders.closeAll()
+            }
+            waits.removeValue(forKey: id)
+            do throws(Kernel.Event.Driver.Error) {
+                try polling.source.deregister(id: id)
+            } catch {
+                wait.complete()
+                return .failure(.event(.right(Event.Error(error))))
+            }
+            wait.complete()
+            return consume outcome
+        }
+
+        /// Drains cancellation requests after the independently reachable
+        /// endpoint wakes the polling source.
+        private func finishCancelledWaits() {
+            let cancelled = waits.filter { $0.value.isCancelled }
+            for (id, wait) in cancelled {
+                guard let execution = wait.claim() else { continue }
+                discard execution
+                let _: Result<Void, Event.Wait.Error<Never>> = finish(
+                    wait,
+                    id: id,
+                    outcome: .failure(.event(.left(.cancelled)))
+                )
+            }
+        }
 
         /// Ensure the given fd is registered with the driver. Idempotent —
         /// reuses an existing entry.
@@ -405,7 +616,16 @@
             let ends = (consume channel).take().ends()
             let received: Kernel.Event?
             do {
-                received = try await ends.receiver.receive()
+                let wakeup = polling.source.wakeup
+                received = try await withTaskCancellationHandler {
+                    try await ends.receiver.receive()
+                } onCancel: {
+                    // The cancellation handler is the one genuinely concurrent
+                    // endpoint in this lifecycle. Kernel.Wakeup.Channel is
+                    // Sendable specifically so cancellation can interrupt the
+                    // source's blocking poll without an actor hop.
+                    wakeup.wake()
+                }
             } catch {
                 remove(sender, from: registrationID, interest: interest)
                 throw Event.Failure.left(.cancelled)

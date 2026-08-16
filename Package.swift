@@ -36,12 +36,18 @@ let package = Package(
         .library(name: "IO Completions Test Support", targets: ["IO Completions Test Support"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/swift-foundations/swift-kernel.git", branch: "main"),
+        .package(
+            url: "https://github.com/swift-foundations/swift-kernel.git",
+            branch: "main"
+        ),
         .package(url: "https://github.com/swift-foundations/swift-async.git", branch: "main"),
         .package(url: "https://github.com/swift-foundations/swift-executors.git", branch: "main"),
         .package(url: "https://github.com/swift-foundations/swift-threads.git", branch: "main"),
         .package(url: "https://github.com/swift-foundations/swift-synchronizers.git", branch: "main"),
-        .package(url: "https://github.com/swift-primitives/swift-io-primitives.git", branch: "main"),
+        .package(
+            url: "https://github.com/swift-primitives/swift-io-primitives.git",
+            branch: "main"
+        ),
         .package(url: "https://github.com/swift-primitives/swift-buffer-primitives.git", branch: "main"),
         .package(url: "https://github.com/swift-primitives/swift-hash-primitives.git", branch: "main"),
         .package(url: "https://github.com/swift-primitives/swift-heap-primitives.git", branch: "main"),
