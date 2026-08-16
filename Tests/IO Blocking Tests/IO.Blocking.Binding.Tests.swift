@@ -66,7 +66,10 @@ extension Basic.BindingTest.MandatoryBinding {
                     let io = IO.blocking()
                     let pipe = try Kernel.Pipe.pipe()
 
-                    let ptr = unsafe UnsafeMutableRawBufferPointer.allocate(byteCount: 1, alignment: 1)
+                    let ptr = unsafe UnsafeMutableRawBufferPointer.allocate(
+                        byteCount: 1,
+                        alignment: 1
+                    )
                     defer { ptr.deallocate() }
                     unsafe ptr[0] = 7
                     let writeBuf: Span.Raw = unsafe .init(UnsafeRawBufferPointer(ptr))
@@ -163,7 +166,10 @@ extension Basic.BindingTest.`Shared Executor` {
 
         let ids = recorder.snapshot()
         #expect(ids.count == 2)
-        #expect(ids[0] == ids[1], "ioA write and ioB read on shared executor should observe the same OS thread")
+        #expect(
+            ids[0] == ids[1],
+            "ioA write and ioB read on shared executor should observe the same OS thread"
+        )
     }
 
     @Test
@@ -278,7 +284,10 @@ extension Basic.BindingTest.`Zero Hop` {
 
         let ids = recorder.snapshot()
         #expect(ids.count == 2)
-        #expect(ids[0] == ids[1], "probe ops on the executor shared with the app actor should observe one OS thread")
+        #expect(
+            ids[0] == ids[1],
+            "probe ops on the executor shared with the app actor should observe one OS thread"
+        )
     }
 }
 

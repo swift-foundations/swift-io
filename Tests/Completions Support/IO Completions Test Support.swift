@@ -56,8 +56,10 @@
             private var _completions: [Kernel.Completion.Event] = []
             private var _flushCount: Int = 0
             private var _isClosed: Bool = false
-            private var _onSubmit: (@Sendable (Kernel.Completion.Submission) -> Kernel.Completion.Event?)? = nil
-            private var _response: (@Sendable (Kernel.Completion.Submission) -> [Kernel.Completion.Event])? = nil
+            private var _onSubmit:
+                (@Sendable (Kernel.Completion.Submission) -> Kernel.Completion.Event?)? = nil
+            private var _response:
+                (@Sendable (Kernel.Completion.Submission) -> [Kernel.Completion.Event])? = nil
             private var _started: Bool = true
 
             public init() {}
@@ -89,7 +91,8 @@
         /// Called synchronously inside the driver's `submit()` under
         /// the lock. Non-nil return enqueues the event for the next
         /// drain (same tick cycle). Nil leaves the operation pending.
-        public var onSubmit: (@Sendable (Kernel.Completion.Submission) -> Kernel.Completion.Event?)? {
+        public var onSubmit: (@Sendable (Kernel.Completion.Submission) -> Kernel.Completion.Event?)?
+        {
             get { sync.synchronize { _onSubmit } }
             set { sync.synchronize { _onSubmit = newValue } }
         }
@@ -99,7 +102,9 @@
         /// This is the batch form of ``onSubmit``. When set, it takes
         /// precedence so one submission can resolve a coordinated group,
         /// such as an original operation and its cancellation request.
-        public var response: (@Sendable (Kernel.Completion.Submission) -> [Kernel.Completion.Event])? {
+        public var response:
+            (@Sendable (Kernel.Completion.Submission) -> [Kernel.Completion.Event])?
+        {
             get { sync.synchronize { _response } }
             set { sync.synchronize { _response = newValue } }
         }

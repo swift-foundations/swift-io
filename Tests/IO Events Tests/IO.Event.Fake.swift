@@ -30,19 +30,44 @@ extension Event.Fake {
         }
 
         let driver = Kernel.Event.Driver(
-            add: { (fd: borrowing Kernel.Descriptor, id: Kernel.Event.ID, interest: Kernel.Event.Interest) throws(Kernel.Event.Driver.Error) in
+            add: {
+                (
+                    fd: borrowing Kernel.Descriptor,
+                    id: Kernel.Event.ID,
+                    interest: Kernel.Event.Interest
+                ) throws(Kernel.Event.Driver.Error) in
                 try controller.add(fd: fd, id: id, interest: interest)
             },
-            modify: { (fd: borrowing Kernel.Descriptor, id: Kernel.Event.ID, old: Kernel.Event.Interest, new: Kernel.Event.Interest) throws(Kernel.Event.Driver.Error) in
+            modify: {
+                (
+                    fd: borrowing Kernel.Descriptor,
+                    id: Kernel.Event.ID,
+                    old: Kernel.Event.Interest,
+                    new: Kernel.Event.Interest
+                ) throws(Kernel.Event.Driver.Error) in
                 try controller.modify(fd: fd, id: id, old: old, new: new)
             },
-            remove: { (fd: borrowing Kernel.Descriptor, id: Kernel.Event.ID, _: Kernel.Event.Interest) throws(Kernel.Event.Driver.Error) in
+            remove: {
+                (
+                    fd: borrowing Kernel.Descriptor,
+                    id: Kernel.Event.ID,
+                    _: Kernel.Event.Interest
+                ) throws(Kernel.Event.Driver.Error) in
                 try controller.remove(fd: fd, id: id)
             },
-            arm: { (fd: borrowing Kernel.Descriptor, id: Kernel.Event.ID, interest: Kernel.Event.Interest) throws(Kernel.Event.Driver.Error) in
+            arm: {
+                (
+                    fd: borrowing Kernel.Descriptor,
+                    id: Kernel.Event.ID,
+                    interest: Kernel.Event.Interest
+                ) throws(Kernel.Event.Driver.Error) in
                 try controller.arm(fd: fd, id: id, interest: interest)
             },
-            poll: { (_: Clock.Continuous.Deadline?, output: inout [Kernel.Event]) throws(Kernel.Event.Driver.Error) -> Int in
+            poll: {
+                (
+                    _: Clock.Continuous.Deadline?,
+                    output: inout [Kernel.Event]
+                ) throws(Kernel.Event.Driver.Error) -> Int in
                 try controller.poll(into: &output)
             },
             close: {
