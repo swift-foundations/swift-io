@@ -6,7 +6,8 @@ extension IO {
     ///
     /// `inbound` is this endpoint's receive half and `outbound` is its send half.
     /// A pair wires each outbound half to the other endpoint's inbound half.
-    public struct Channel<Element: ~Copyable, Failure: Swift.Error & Sendable>: ~Copyable, Sendable {
+    public struct Channel<Element: ~Copyable, Failure: Swift.Error & Sendable>: ~Copyable, Sendable
+    {
         /// The typed outcome of an endpoint operation.
         public typealias Error = Async.Channel<Element, Failure>.Error
 

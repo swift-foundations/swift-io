@@ -4,18 +4,18 @@ import PackageDescription
 
 let eventsTests: [Target] = {
     #if os(Windows)
-    []
+        []
     #else
-    [
-        .testTarget(
-            name: "IO Events Tests",
-            dependencies: [
-                "IO Events",
-                "IO Test Support",
-                .product(name: "Heap Primitive", package: "swift-heap-primitives"),
-            ]
-        ),
-    ]
+        [
+            .testTarget(
+                name: "IO Events Tests",
+                dependencies: [
+                    "IO Events",
+                    "IO Test Support",
+                    .product(name: "Heap Primitive", package: "swift-heap-primitives"),
+                ]
+            )
+        ]
     #endif
 }()
 
@@ -26,7 +26,7 @@ let package = Package(
         .iOS(.v27),
         .tvOS(.v27),
         .watchOS(.v27),
-        .visionOS(.v27)
+        .visionOS(.v27),
     ],
     products: [
         .library(name: "IO", targets: ["IO"]),
@@ -40,29 +40,80 @@ let package = Package(
             url: "https://github.com/swift-foundations/swift-kernel.git",
             branch: "main"
         ),
-        .package(url: "https://github.com/swift-primitives/swift-async-primitives.git", branch: "main"),
-        .package(url: "https://github.com/swift-primitives/swift-byte-primitives.git", branch: "main"),
-        .package(url: "https://github.com/swift-primitives/swift-index-primitives.git", branch: "main"),
+        .package(
+            url: "https://github.com/swift-primitives/swift-async-primitives.git",
+            branch: "main"
+        ),
+        .package(
+            url: "https://github.com/swift-primitives/swift-byte-primitives.git",
+            branch: "main"
+        ),
+        .package(
+            url: "https://github.com/swift-primitives/swift-index-primitives.git",
+            branch: "main"
+        ),
         .package(url: "https://github.com/swift-foundations/swift-executors.git", branch: "main"),
         .package(url: "https://github.com/swift-foundations/swift-threads.git", branch: "main"),
-        .package(url: "https://github.com/swift-foundations/swift-synchronizers.git", branch: "main"),
+        .package(
+            url: "https://github.com/swift-foundations/swift-synchronizers.git",
+            branch: "main"
+        ),
         .package(
             url: "https://github.com/swift-primitives/swift-io-primitives.git",
             branch: "main"
         ),
-        .package(url: "https://github.com/swift-primitives/swift-buffer-primitives.git", branch: "main"),
-        .package(url: "https://github.com/swift-primitives/swift-hash-primitives.git", branch: "main"),
-        .package(url: "https://github.com/swift-primitives/swift-heap-primitives.git", branch: "main"),
-        .package(url: "https://github.com/swift-primitives/swift-dictionary-primitives.git", branch: "main"),
-        .package(url: "https://github.com/swift-primitives/swift-hash-table-primitives.git", branch: "main"),
-        .package(url: "https://github.com/swift-primitives/swift-buffer-linear-primitives.git", branch: "main"),
-        .package(url: "https://github.com/swift-primitives/swift-storage-primitives.git", branch: "main"),
-        .package(url: "https://github.com/swift-primitives/swift-memory-heap-primitives.git", branch: "main"),
-        .package(url: "https://github.com/swift-primitives/swift-memory-allocation-primitives.git", branch: "main"),
-        .package(url: "https://github.com/swift-primitives/swift-memory-primitives.git", branch: "main"),
-        .package(url: "https://github.com/swift-primitives/swift-span-primitives.git", branch: "main"),
-        .package(url: "https://github.com/swift-primitives/swift-either-primitives.git", branch: "main"),
-        .package(url: "https://github.com/swift-primitives/swift-witness-primitives.git", branch: "main"),
+        .package(
+            url: "https://github.com/swift-primitives/swift-buffer-primitives.git",
+            branch: "main"
+        ),
+        .package(
+            url: "https://github.com/swift-primitives/swift-hash-primitives.git",
+            branch: "main"
+        ),
+        .package(
+            url: "https://github.com/swift-primitives/swift-heap-primitives.git",
+            branch: "main"
+        ),
+        .package(
+            url: "https://github.com/swift-primitives/swift-dictionary-primitives.git",
+            branch: "main"
+        ),
+        .package(
+            url: "https://github.com/swift-primitives/swift-hash-table-primitives.git",
+            branch: "main"
+        ),
+        .package(
+            url: "https://github.com/swift-primitives/swift-buffer-linear-primitives.git",
+            branch: "main"
+        ),
+        .package(
+            url: "https://github.com/swift-primitives/swift-storage-primitives.git",
+            branch: "main"
+        ),
+        .package(
+            url: "https://github.com/swift-primitives/swift-memory-heap-primitives.git",
+            branch: "main"
+        ),
+        .package(
+            url: "https://github.com/swift-primitives/swift-memory-allocation-primitives.git",
+            branch: "main"
+        ),
+        .package(
+            url: "https://github.com/swift-primitives/swift-memory-primitives.git",
+            branch: "main"
+        ),
+        .package(
+            url: "https://github.com/swift-primitives/swift-span-primitives.git",
+            branch: "main"
+        ),
+        .package(
+            url: "https://github.com/swift-primitives/swift-either-primitives.git",
+            branch: "main"
+        ),
+        .package(
+            url: "https://github.com/swift-primitives/swift-witness-primitives.git",
+            branch: "main"
+        ),
         .package(url: "https://github.com/swift-foundations/swift-witnesses.git", branch: "main"),
     ],
     targets: [
@@ -103,12 +154,24 @@ let package = Package(
                 .product(name: "Hash Indexed Primitive", package: "swift-hash-table-primitives"),
                 .product(name: "Hash Tagged Primitives", package: "swift-hash-primitives"),
                 .product(name: "Buffer Primitive", package: "swift-buffer-primitives"),
-                .product(name: "Buffer Linear Primitive", package: "swift-buffer-linear-primitives"),
-                .product(name: "Buffer Linear Primitives", package: "swift-buffer-linear-primitives"),
+                .product(
+                    name: "Buffer Linear Primitive",
+                    package: "swift-buffer-linear-primitives"
+                ),
+                .product(
+                    name: "Buffer Linear Primitives",
+                    package: "swift-buffer-linear-primitives"
+                ),
                 .product(name: "Storage Primitive", package: "swift-storage-primitives"),
-                .product(name: "Storage Contiguous Primitives", package: "swift-storage-primitives"),
+                .product(
+                    name: "Storage Contiguous Primitives",
+                    package: "swift-storage-primitives"
+                ),
                 .product(name: "Memory Heap Primitives", package: "swift-memory-heap-primitives"),
-                .product(name: "Memory Allocator Primitive", package: "swift-memory-allocation-primitives"),
+                .product(
+                    name: "Memory Allocator Primitive",
+                    package: "swift-memory-allocation-primitives"
+                ),
                 .product(name: "Synchronizer Blocking", package: "swift-synchronizers"),
             ],
             exclude: ["README.md"]
@@ -171,7 +234,7 @@ let package = Package(
         .testTarget(
             name: "IO Basic Tests",
             dependencies: [
-                "IO Test Support",
+                "IO Test Support"
             ],
             path: "Tests/IO Blocking Tests"
         ),

@@ -8,7 +8,9 @@ private enum ChannelFailure: Swift.Error, Sendable, Equatable {
 @Suite
 struct `IO Channel Tests` {
     @Test
-    func `pair transports in both directions and preserves half close drain`() async throws(IO.Channel<Int, ChannelFailure>.Error) {
+    func `pair transports in both directions and preserves half close drain`() async throws(IO
+        .Channel<Int, ChannelFailure>.Error)
+    {
         var (left, right) = IO.Channel<Int, ChannelFailure>.pair(capacity: 2)
 
         try await left.outbound.send(1)
@@ -21,7 +23,9 @@ struct `IO Channel Tests` {
     }
 
     @Test
-    func `directional failure crosses only its owning direction`() async throws(IO.Channel<Int, ChannelFailure>.Error) {
+    func `directional failure crosses only its owning direction`() async throws(IO.Channel<
+        Int, ChannelFailure
+    >.Error) {
         var (left, right) = IO.Channel<Int, ChannelFailure>.pair(capacity: 2)
 
         try await left.outbound.send(1)
@@ -35,6 +39,7 @@ struct `IO Channel Tests` {
             switch error {
             case .failed(.stopped(2)):
                 break
+
             default:
                 Issue.record("Expected the declared outbound failure")
             }
@@ -45,7 +50,9 @@ struct `IO Channel Tests` {
     }
 
     @Test
-    func `reader failure resumes a backpressured writer with the exact failure`() async throws(IO.Channel<Int, ChannelFailure>.Error) {
+    func `reader failure resumes a backpressured writer with the exact failure`() async throws(IO
+        .Channel<Int, ChannelFailure>.Error)
+    {
         var (left, right) = IO.Channel<Int, ChannelFailure>.pair(capacity: 1)
         let writer = left.outbound
 
@@ -64,13 +71,16 @@ struct `IO Channel Tests` {
         switch await blocked.value {
         case .some(.failed(.stopped(4))):
             break
+
         default:
             Issue.record("Expected the declared reader failure")
         }
     }
 
     @Test
-    func `shutdown closes inbound before outbound without changing typed endpoint laws`() async throws(IO.Channel<Int, ChannelFailure>.Error) {
+    func `shutdown closes inbound before outbound without changing typed endpoint laws`()
+        async throws(IO.Channel<Int, ChannelFailure>.Error)
+    {
         var (left, right) = IO.Channel<Int, ChannelFailure>.pair(capacity: 1)
 
         left.shutdown()
@@ -82,6 +92,7 @@ struct `IO Channel Tests` {
             switch error {
             case .finished:
                 break
+
             default:
                 Issue.record("Expected shutdown's inbound close to finish the peer writer")
             }

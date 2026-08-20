@@ -419,6 +419,7 @@
                         switch error {
                         case .creation(let failure), .join(let failure):
                             outcome = .failure(.thread(failure))
+
                         case .operation(let failure):
                             outcome = .failure(.operation(failure))
                         }
