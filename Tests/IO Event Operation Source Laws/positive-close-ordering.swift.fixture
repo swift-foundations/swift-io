@@ -1,9 +1,0 @@
-import IO_Events
-
-func release(
-    descriptor: consuming Kernel.Descriptor,
-    completion: consuming IO<Never>.Completion
-) async {
-    await completion.wait()
-    discard descriptor
-}

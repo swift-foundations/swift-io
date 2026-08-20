@@ -36,22 +36,8 @@ let package = Package(
         .library(name: "IO Completions Test Support", targets: ["IO Completions Test Support"]),
     ],
     dependencies: [
-        .package(
-            url: "https://github.com/swift-foundations/swift-kernel.git",
-            branch: "main"
-        ),
-        .package(
-            url: "https://github.com/swift-primitives/swift-async-primitives.git",
-            branch: "main"
-        ),
-        .package(
-            url: "https://github.com/swift-primitives/swift-byte-primitives.git",
-            branch: "main"
-        ),
-        .package(
-            url: "https://github.com/swift-primitives/swift-index-primitives.git",
-            branch: "main"
-        ),
+        .package(url: "https://github.com/swift-foundations/swift-kernel.git", branch: "main"),
+        .package(url: "https://github.com/swift-foundations/swift-async.git", branch: "main"),
         .package(url: "https://github.com/swift-foundations/swift-executors.git", branch: "main"),
         .package(url: "https://github.com/swift-foundations/swift-threads.git", branch: "main"),
         .package(
@@ -126,7 +112,7 @@ let package = Package(
                 .product(name: "Kernel", package: "swift-kernel"),
                 .product(name: "IO Primitives", package: "swift-io-primitives"),
                 .product(name: "Executors", package: "swift-executors"),
-                .product(name: "Async Primitives", package: "swift-async-primitives"),
+                .product(name: "Async", package: "swift-async"),
                 .product(name: "Hash Primitives", package: "swift-hash-primitives"),
                 .product(name: "Heap Primitive", package: "swift-heap-primitives"),
                 .product(name: "Buffer Primitives", package: "swift-buffer-primitives"),
@@ -148,7 +134,7 @@ let package = Package(
                 .product(name: "Kernel Completion", package: "swift-kernel"),
                 .product(name: "IO Primitives", package: "swift-io-primitives"),
                 .product(name: "Executors", package: "swift-executors"),
-                .product(name: "Async Primitives", package: "swift-async-primitives"),
+                .product(name: "Async", package: "swift-async"),
                 .product(name: "Memory Primitives", package: "swift-memory-primitives"),
                 .product(name: "Dictionary Primitives", package: "swift-dictionary-primitives"),
                 .product(name: "Hash Indexed Primitive", package: "swift-hash-table-primitives"),
@@ -187,10 +173,6 @@ let package = Package(
                 .product(name: "Kernel", package: "swift-kernel"),
                 .product(name: "IO Primitives", package: "swift-io-primitives"),
                 .product(name: "Either Primitives", package: "swift-either-primitives"),
-                .product(name: "Async Channel Primitives", package: "swift-async-primitives"),
-                .product(name: "Buffer Primitives", package: "swift-buffer-primitives"),
-                .product(name: "Byte Primitives", package: "swift-byte-primitives"),
-                .product(name: "Index Primitives", package: "swift-index-primitives"),
             ]
         ),
 

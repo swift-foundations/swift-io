@@ -1,7 +1,0 @@
-import IO_Events
-
-func cancel<Output: ~Copyable, Failure: Swift.Error>(
-    _ operation: borrowing IO<Never>.Operation<Output, Failure>
-) {
-    operation.cancellation.cancel()
-}

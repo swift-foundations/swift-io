@@ -81,7 +81,7 @@
             ///
             /// `nonisolated let`: single-assignment in init; readable from
             /// the nonisolated `unownedExecutor` accessor without isolation
-            /// hops. Completion is `@unchecked Sendable` by
+            /// hops. Completion is `@unsafe @unchecked Sendable` by
             /// construction.
             nonisolated private let completion: Kernel.Thread.Executor.Completion
 
@@ -523,7 +523,7 @@
         /// `Synchronizer.Blocking<1>`. Every access goes through
         /// `sync.synchronize`, providing mutual exclusion across the actor job
         /// and the executor-thread CQE dispatch.
-        fileprivate final class CancelCoordinator: @unchecked Sendable {
+        fileprivate final class CancelCoordinator: @unsafe @unchecked Sendable {
             private let sync: Synchronizer.Blocking<1> = .init()
             private var _cancelled: Bool = false
             private var _gateOpened: Bool = false
