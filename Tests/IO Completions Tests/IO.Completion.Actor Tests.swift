@@ -1,12 +1,3 @@
-//
-//  Completion.Actor Tests.swift
-//  swift-io
-//
-//  FakeBackend-driven tests for completions actor internals that can't
-//  be verified through the IO witness: lifecycle observation, submission
-//  recording, and error injection.
-//
-
 #if !os(Windows)
 
     import Testing
@@ -94,7 +85,7 @@
                     backend.onSubmit = { submission in
                         Kernel.Completion.Event(
                             token: submission.token,
-                            result: .init(rawValue: -9)  // -EBADF
+                            result: .init(rawValue: -9)
                         )
                     }
                     let pipe = try Kernel.Pipe.pipe()
@@ -108,7 +99,7 @@
                         _ = try await actor.read(from: pipe.read, into: buffer)
                         Issue.record("expected Basic.Error")
                     } catch {
-                        // Error thrown — correct behavior
+
                     }
                 }
             }

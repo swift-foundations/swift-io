@@ -1,11 +1,3 @@
-//
-//  Event.Actor.RetryDecision.Tests.swift
-//  swift-io
-//
-//  Unit tests for the wait-failure classification used by the Actor's
-//  tick closure. Verifies the EINTR / ENOMEM / EAGAIN / fatal mapping.
-//
-
 import Kernel
 import Testing
 
@@ -19,8 +11,6 @@ extension Event.Actor.RetryDecision {
 }
 
 extension Event.Actor.RetryDecision.Test.Unit {
-
-    // MARK: - Transient errors retry
 
     @Test
     func `EINTR is classified as retry`() {
@@ -45,8 +35,6 @@ extension Event.Actor.RetryDecision.Test.Unit {
         )
         #expect(decision == .retry)
     }
-
-    // MARK: - Fatal errors halt
 
     @Test
     func `Unknown platform code halts`() {

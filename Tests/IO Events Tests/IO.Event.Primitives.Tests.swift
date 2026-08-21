@@ -1,10 +1,3 @@
-//
-//  Event.Primitives.Tests.swift
-//  swift-io
-//
-//  Created by Coen ten Thije Boonkkamp on 28/12/2025.
-//
-
 import IO_Events
 import IO_Test_Support
 import Kernel
@@ -64,8 +57,7 @@ struct `Event Primitives` {
     @Test
     func `Token creation and ID access`() {
         let _ = Event.ID(42)
-        // Tokens are created internally, but we can test the type exists
-        // and the ID is accessible via consuming operations
+
     }
 
     @Test

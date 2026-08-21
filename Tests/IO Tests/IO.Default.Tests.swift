@@ -1,12 +1,3 @@
-//
-//  IO.Default.Tests.swift
-//  swift-io
-//
-//  Smoke coverage for IO.default() — the host-adaptive factory.
-//  The specific strategy picked varies by host; the tests assert the
-//  properties that must hold regardless of strategy.
-//
-
 import IO_Test_Support
 @_spi(Syscall) import Kernel
 import Memory_Primitives
@@ -25,11 +16,7 @@ struct Test {
     @Test
     func `IO.default() returns an IO with a non-default executor`() async throws {
         let io = IO.default()
-        // The witness always carries a strategy-specific executor
-        // (blocking thread, events loop, or completions loop). Its
-        // identity is observable — if it were the global cooperative
-        // executor the shared-executor TCA26 pattern would silently
-        // degrade to a cross-hop.
+
         _ = io.unownedExecutor
     }
 
@@ -38,10 +25,6 @@ struct Test {
         let io = IO.default()
         let pipe = try Kernel.Pipe.pipe()
 
-        // events strategy requires non-blocking mode on the read side
-        // for EAGAIN-armed retry; the default may or may not land on
-        // events, but setting non-blocking is harmless under blocking
-        // and completions.
         #if !os(Windows)
             try? Kernel.File.Control.setNonBlocking(pipe.read)
         #endif

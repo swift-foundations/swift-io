@@ -1,8 +1,3 @@
-//
-//  IO Tests.swift
-//  swift-io
-//
-
 import IO_Test_Support
 import Testing
 
@@ -16,11 +11,9 @@ extension Basic {
     }
 }
 
-// MARK: - Unit Tests
-
 extension Basic.Test.Unit {
     @Test
     func `Basic namespace exists`() {
-        // Basic is the swift-io domain namespace, verified by compilation.
+
     }
 }

@@ -1,29 +1,16 @@
-//
-//  Event.Fake.swift
-//  swift-io
-//
-//  Deterministic fake event source for testing non-blocking I/O invariants.
-//
-
 import IO_Test_Support
 @_spi(Syscall) @_spi(Internal) import Kernel
 import Synchronization
 
 @_spi(Syscall) @testable import IO_Events
 
-// MARK: - Fake Source
-
 extension Event {
-    /// Deterministic fake event source for testing.
+
     enum Fake {}
 }
 
 extension Event.Fake {
-    /// Creates a fake event source controlled by the given controller.
-    ///
-    /// The returned `Kernel.Event.Source` uses the L1 Driver (with ID
-    /// generation, registry, and staleness suppression) backed by fake
-    /// closures that delegate to the Controller.
+
     static func make(controller: Controller) -> Kernel.Event.Source {
         let fakeWakeup = Kernel.Wakeup.Channel {
             controller.state.withLock { $0.wakeupPending = true }
@@ -79,14 +66,8 @@ extension Event.Fake {
     }
 }
 
-// MARK: - Controller
-
 extension Event.Fake {
-    /// Test controller for the fake event source.
-    ///
-    /// Tracks backend operations called by the L1 Driver. The Driver manages
-    /// IDs and registry internally — the Controller just records what the
-    /// backend receives and provides events for polling.
+
     final class Controller: @unchecked Sendable {
         let state: Mutex<State>
 
@@ -98,22 +79,21 @@ extension Event.Fake {
 
 extension Event.Fake.Controller {
     struct State {
-        /// Backend-tracked registrations (mirrors what add/remove receive).
+
         var registrations: [Kernel.Event.ID: Registration] = [:]
-        /// Events to deliver on next poll.
+
         var pendingEvents: [Kernel.Event] = []
-        /// Wakeup signal pending.
+
         var wakeupPending: Bool = false
-        /// Simulate shutdown (reject operations).
+
         var isShutdown: Bool = false
-        /// Whether close() was called.
+
         var isClosed: Bool = false
-        /// Error the next poll throws (one-shot), simulating a fatal
-        /// (or transient) wait failure surfacing from the driver.
+
         var nextPollError: Kernel.Event.Driver.Error?
-        /// Error the next arm throws (one-shot).
+
         var nextArmError: Kernel.Event.Driver.Error?
-        /// Number of backend arm invocations.
+
         var armCount: Int = 0
     }
 
@@ -121,8 +101,6 @@ extension Event.Fake.Controller {
         let rawDescriptor: Int32
         var interest: Kernel.Event.Interest
     }
-
-    // MARK: - Test Inspection API
 
     func registrations() -> [Kernel.Event.ID: Registration] {
         state.withLock { $0.registrations }
@@ -148,12 +126,10 @@ extension Event.Fake.Controller {
         state.withLock { $0.isShutdown = true }
     }
 
-    /// Make the next poll throw the given driver error (one-shot).
     func failNextPoll(with error: Kernel.Event.Driver.Error) {
         state.withLock { $0.nextPollError = error }
     }
 
-    /// Make the next arm throw the given driver error (one-shot).
     func failNextArm(with error: Kernel.Event.Driver.Error) {
         state.withLock { $0.nextArmError = error }
     }
@@ -161,8 +137,6 @@ extension Event.Fake.Controller {
     func armCount() -> Int {
         state.withLock { $0.armCount }
     }
-
-    // MARK: - Backend Operations (called by Driver closures)
 
     func add(
         fd: borrowing Kernel.Descriptor,

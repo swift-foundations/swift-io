@@ -1,15 +1,3 @@
-//
-//  Basic.Binding.Tests.swift
-//  swift-io
-//
-//  Regression tests for Shape B's mandatory executor binding guarantees.
-//  The witness forwards to an internal `Basic.Actor` pinned to a
-//  concrete `Kernel.Thread.Executor`; actor isolation cannot be broken by
-//  `Task.sleep`, `@MainActor` hops, or unstructured tasks.
-//
-//  See Research/io-blocking-executor-binding.md v4.0.
-//
-
 import Executors
 import IO_Test_Support
 import Kernel
@@ -27,15 +15,10 @@ extension Basic {
     }
 }
 
-// MARK: - Mandatory Binding
-
 extension Basic.BindingTest.MandatoryBinding {
     @Test
     func `read survives Task.sleep — actor isolation pins to executor`() async throws {
-        // Option A's failure mode: Task.sleep loses TaskExecutor preference
-        // (swift#74395), so the next sync read would block a cooperative
-        // thread. Under Shape B, actor isolation forces the second read onto
-        // the impl's executor regardless of intervening suspensions.
+
         let io = IO.blocking()
         let pipe = try Kernel.Pipe.pipe()
 
@@ -85,13 +68,6 @@ extension Basic.BindingTest.MandatoryBinding {
     }
 }
 
-// MARK: - Shared-executor probes
-//
-// Helper: builds an `IO` whose closures forward to an internal Actor and
-// also captures, in a recorder, the OS thread ID seen by each call. The
-// thread ID is sampled inside the actor's isolated method, so it observes
-// the executor's actual OS thread — actor isolation guarantees this.
-
 private final class ThreadRecorder: Sendable {
     private let storage = Mutex<[Kernel.Thread.ID]>([])
 }
@@ -130,8 +106,7 @@ private func makeProbedIO(
             await actor.close(consume fd)
         },
         ready: { _, _ throws(Basic.Error) in
-            // Blocking strategy: no-op (same semantics as the
-            // production IO+Blocking factory).
+
         }
     )
     let runner = unsafe IO<Basic.Capabilities>.Runner(
@@ -140,8 +115,6 @@ private func makeProbedIO(
     )
     return IO(capabilities: capabilities, runner: runner)
 }
-
-// MARK: - Shared Executor
 
 extension Basic.BindingTest.`Shared Executor` {
     @Test
@@ -174,9 +147,7 @@ extension Basic.BindingTest.`Shared Executor` {
 
     @Test
     func `two IOs on DIFFERENT executors land on DIFFERENT OS threads (control)`() async throws {
-        // Without this control, the equality assertion in the
-        // `twoIOsSameExecutorThreadID` test could be vacuously true on a
-        // single-threaded runtime. This control rules that out.
+
         let executorA = Kernel.Thread.Executor()
         defer { executorA.shutdown() }
         let executorB = Kernel.Thread.Executor()
@@ -201,8 +172,7 @@ extension Basic.BindingTest.`Shared Executor` {
 
         let ids = recorder.snapshot()
         #expect(ids.count == 4)
-        // ioA's two ops share their thread; ioB's two ops share their thread;
-        // the two executors do NOT share.
+
         let aIDs = Set([ids[0], ids[2]])
         let bIDs = Set([ids[1], ids[3]])
         #expect(aIDs.count == 1, "ioA's ops should share one thread")
@@ -211,10 +181,6 @@ extension Basic.BindingTest.`Shared Executor` {
     }
 }
 
-// MARK: - Zero-Hop App Actor
-
-/// An app actor that co-locates on the IO's executor — the runtime elides
-/// the per-op hop because both share the same `unownedExecutor`.
 actor SharedExecutorApp {
     let executor: Kernel.Thread.Executor
     let io: IO<Basic.Capabilities>
@@ -254,14 +220,12 @@ extension Basic.BindingTest.`Zero Hop` {
         defer { executor.shutdown() }
 
         let recorder = ThreadRecorder()
-        // Probe IO captures the executor's thread on every op.
+
         let probe = makeProbedIO(on: executor, recorder: recorder)
 
-        // App actor uses the SAME executor via IO.blocking(on:).
         let app = SharedExecutorApp(executor: executor)
         let pipe = try Kernel.Pipe.pipe()
 
-        // A roundtrip through the app actor's IO.
         let got = try await app.roundtrip(
             writeFd: pipe.write,
             readFd: pipe.read,
@@ -269,10 +233,6 @@ extension Basic.BindingTest.`Zero Hop` {
         )
         #expect(got == 42)
 
-        // A separate probe op on the same executor — should record the same
-        // thread ID. Since SharedExecutorApp's IO and the probe IO both wrap
-        // actors bound to the same Kernel.Thread.Executor, they share the
-        // executor's single OS thread.
         let pipe2 = try Kernel.Pipe.pipe()
         let ptr = unsafe UnsafeMutableRawBufferPointer.allocate(byteCount: 1, alignment: 1)
         defer { ptr.deallocate() }
@@ -291,26 +251,14 @@ extension Basic.BindingTest.`Zero Hop` {
     }
 }
 
-// MARK: - Head-of-Line Blocking
-
 extension Basic.BindingTest.`Head Of Line` {
     @Test
     func `ops on a single .blocking() IO serialize on the actor`() async throws {
-        // Demonstrates expected strategy-specific behavior — actor isolation
-        // serializes ops on a single `.blocking()` IO. Mitigation when needed:
-        // multiple IOs, pooled factory, or a different strategy.
-        //
-        // The assertion is structural: two ops on the same actor cannot
-        // observe overlapping completion-counter increments. We pre-place
-        // bytes in two pipes so each read can complete; then run two reads
-        // concurrently and record the order each finishes via an atomic
-        // counter. Under SerialExecutor + actor isolation, the pair must
-        // observe distinct sequence numbers (1 and 2), never the same.
+
         let io = IO.blocking()
         let pipeA = try Kernel.Pipe.pipe()
         let pipeB = try Kernel.Pipe.pipe()
 
-        // Pre-place a byte in each so reads can complete without blocking.
         let oneByte = unsafe UnsafeMutableRawBufferPointer.allocate(byteCount: 1, alignment: 1)
         defer { oneByte.deallocate() }
         unsafe oneByte[0] = 99
@@ -345,10 +293,6 @@ extension Basic.BindingTest.`Head Of Line` {
         _ = try await a
         _ = try await b
 
-        // Both ops completed and recorded — proves the two reads serialized
-        // on the actor without deadlocking. Ordering between 1 and 2 is not
-        // observable across the actor boundary; the structural claim is
-        // "both ran, in some order, sequentialized by the actor's executor."
         let entries = order.snapshot()
         #expect(entries.count == 2)
         #expect(Set(entries) == Set([1, 2]))

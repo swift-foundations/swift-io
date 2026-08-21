@@ -1,8 +1,3 @@
-//
-//  IO.Event.Actor.Registration.Senders Tests.swift
-//  swift-io
-//
-
 import Async
 import Testing
 

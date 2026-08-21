@@ -1,14 +1,3 @@
-//
-//  Completion.Actor+Basic.swift
-//  IO Test Support
-//
-//  Basic-domain (fd byte-ops) operations on the completions-strategy
-//  actor. Built on the proactor primitive `submit(_:descriptor:mapEvent:)`
-//  from swift-io's IO Completions module. Each domain (Basic, File,
-//  Socket, Server) contributes its own extensions here; the proactor
-//  itself stays domain-agnostic.
-//
-
 #if !os(Windows)
 
     public import IO
@@ -18,7 +7,6 @@
 
     extension Completion.Actor {
 
-        /// Read bytes from fd into buffer via `IORING_OP_READ`.
         public func read(
             from fd: borrowing Kernel.Descriptor,
             into buffer: Span.Raw.Mutable
@@ -44,7 +32,6 @@
             }
         }
 
-        /// Write bytes from buffer to fd via `IORING_OP_WRITE`.
         public func write(
             to fd: borrowing Kernel.Descriptor,
             from buffer: Span.Raw
@@ -70,18 +57,14 @@
             }
         }
 
-        /// Close fd synchronously (`close(2)`); consistent with the
-        /// blocking and events strategies.
         public func close(_ fd: consuming Kernel.Descriptor) async {
             do throws(Kernel.Close.Error) {
                 try Kernel.Close.close(consume fd)
             } catch {
-                // Swallow — close errors are rarely actionable; the fd is
-                // closed at the kernel level regardless.
+
             }
         }
 
-        /// Wait for fd readiness via `IORING_OP_POLL_ADD`.
         public func ready(
             from fd: borrowing Kernel.Descriptor,
             interest: Kernel.Event.Interest

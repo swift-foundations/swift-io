@@ -1,13 +1,3 @@
-//
-//  Events.Tests.swift
-//  swift-io
-//
-//  Smoke tests for the events-strategy IO witness produced by
-//  IO.events(on:) / IO.events(). Uses pipes as the test fd — pipes are
-//  pollable on both kqueue and epoll, and the fd pair is simple to set
-//  up without any socket / network configuration.
-//
-
 import IO_Test_Support
 @_spi(Syscall) import Kernel
 import Memory_Primitives
@@ -25,8 +15,6 @@ extension Event.Actor {
     struct Test {}
 }
 
-// MARK: - Pipe round-trip
-
 extension Event.Actor.Test {
 
     @Test
@@ -34,7 +22,6 @@ extension Event.Actor.Test {
         let actor = try Event.Actor()
         let io = IO.events(on: actor)
 
-        // Pipe read end must be non-blocking for events strategy.
         let pipe = try Kernel.Pipe.pipe()
         try Kernel.File.Control.setNonBlocking(pipe.read)
 
@@ -66,8 +53,6 @@ extension Event.Actor.Test {
     }
 }
 
-// MARK: - Ready composition
-
 extension Event.Actor.Test {
 
     @Test
@@ -79,9 +64,6 @@ extension Event.Actor.Test {
         try Kernel.File.Control.setNonBlocking(pipe.read)
         try Kernel.File.Control.setNonBlocking(pipe.write)
 
-        // Fresh pipe buffer is empty → write end is always-ready. The kernel
-        // fires a write-readiness event immediately on arm; ready() returns
-        // promptly without blocking indefinitely.
         try await io.ready(from: pipe.write, interest: .write)
     }
 
@@ -94,7 +76,6 @@ extension Event.Actor.Test {
         try Kernel.File.Control.setNonBlocking(pipe.read)
         try Kernel.File.Control.setNonBlocking(pipe.write)
 
-        // Await write-readiness before issuing the syscall.
         try await io.ready(from: pipe.write, interest: .write)
 
         let payload: [UInt8] = [0x01, 0x02, 0x03]
@@ -107,7 +88,6 @@ extension Event.Actor.Test {
         let writeBuffer: Span.Raw = unsafe .init(UnsafeRawBufferPointer(writePtr))
         _ = try await io.write(to: pipe.write, from: writeBuffer)
 
-        // Now read-readiness is reachable.
         try await io.ready(from: pipe.read, interest: .read)
 
         let readPtr = UnsafeMutableRawBufferPointer.allocate(
@@ -124,8 +104,6 @@ extension Event.Actor.Test {
     }
 }
 
-// MARK: - Shared-executor binding
-
 extension Event.Actor.Test {
 
     @Test
@@ -133,9 +111,6 @@ extension Event.Actor.Test {
         let actor = try Event.Actor()
         let io = IO.events(on: actor)
 
-        // The witness's executor is the actor's Polling executor. At minimum it must
-        // be obtainable; full TCA26 probing is covered by IO Blocking's
-        // binding tests which exercise the shared-executor pattern directly.
         _ = io.unownedExecutor
     }
 
@@ -145,13 +120,9 @@ extension Event.Actor.Test {
         let ioA = IO.events(on: actor)
         let ioB = IO.events(on: actor)
 
-        // Same actor → same Polling executor.
         let execA = unsafe ioA.unownedExecutor
         let execB = unsafe ioB.unownedExecutor
-        // UnownedSerialExecutor doesn't expose equality directly; observe
-        // that both witnesses at least exist concurrently without reactor
-        // contention. Fine-grained executor-identity assertions are
-        // covered elsewhere in IO Blocking's binding suite.
+
         _ = (execA, execB)
     }
 }

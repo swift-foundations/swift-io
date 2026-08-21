@@ -1,10 +1,3 @@
-//
-//  Event.Driver.Contract.Tests.swift
-//  swift-io
-//
-//  Tests for the event source contract using the Fake.
-//
-
 import IO_Test_Support
 @_spi(Syscall) import Kernel
 import Testing
@@ -20,8 +13,6 @@ extension Event.Fake {
         )
     )
     struct Test {
-
-        // MARK: - Registration Contract
 
         @Test
         func `register creates valid ID and stores mapping`() throws {
@@ -76,8 +67,6 @@ extension Event.Fake {
             #expect(id2 != id3)
             #expect(id1 != id3)
         }
-
-        // MARK: - Modify Contract
 
         @Test
         func `modify updates interest correctly`() throws {
@@ -137,8 +126,6 @@ extension Event.Fake {
             }
         }
 
-        // MARK: - Deregister Contract
-
         @Test
         func `deregister removes registration`() throws {
             let controller = Event.Fake.Controller()
@@ -164,7 +151,7 @@ extension Event.Fake {
                 interest: .read
             )
             try source.deregister(id: id)
-            try source.deregister(id: id)  // Should not throw
+            try source.deregister(id: id)
 
             #expect(controller.isRegistered(id) == false)
         }
@@ -175,10 +162,8 @@ extension Event.Fake {
             var source = Event.Fake.make(controller: controller)
 
             let fakeID = Event.ID(999)
-            try source.deregister(id: fakeID)  // Should not throw
+            try source.deregister(id: fakeID)
         }
-
-        // MARK: - Poll Race Rule
 
         @Test
         func `poll drops events for deregistered IDs`() throws {
@@ -190,15 +175,9 @@ extension Event.Fake {
                 interest: .read
             )
 
-            // Push event, then deregister before poll
             controller.pushEvent(Kernel.Event(id: id, interest: .read, flags: []))
             try source.deregister(id: id)
 
-            // Poll should return 0 events (staleness suppression filters deregistered IDs)
-            // Deliberate: [Kernel.Event](repeating:count:) parses ambiguously against
-            // ISO_9945.Kernel.Event on Ubuntu release builds (b3c5b86e); the fully-qualified
-            // Swift.Array<Kernel.Event> form removes the ambiguity and must stay explicit.
-            // swiftlint:disable:next syntactic_sugar
             var buffer = Swift.Array<Kernel.Event>(repeating: .empty, count: 10)
             let count = try source.poll(deadline: nil, into: &buffer)
             #expect(count == 0)
@@ -216,10 +195,6 @@ extension Event.Fake {
 
             controller.pushEvent(Kernel.Event(id: id, interest: .read, flags: []))
 
-            // Deliberate: [Kernel.Event](repeating:count:) parses ambiguously against
-            // ISO_9945.Kernel.Event on Ubuntu release builds (b3c5b86e); the fully-qualified
-            // Swift.Array<Kernel.Event> form removes the ambiguity and must stay explicit.
-            // swiftlint:disable:next syntactic_sugar
             var buffer = Swift.Array<Kernel.Event>(repeating: .empty, count: 10)
             let count = try source.poll(deadline: nil, into: &buffer)
             #expect(count == 1)
@@ -246,18 +221,12 @@ extension Event.Fake {
                 Kernel.Event(id: id2, interest: .write, flags: []),
             ])
 
-            // Deliberate: [Kernel.Event](repeating:count:) parses ambiguously against
-            // ISO_9945.Kernel.Event on Ubuntu release builds (b3c5b86e); the fully-qualified
-            // Swift.Array<Kernel.Event> form removes the ambiguity and must stay explicit.
-            // swiftlint:disable:next syntactic_sugar
             var buffer = Swift.Array<Kernel.Event>(repeating: .empty, count: 10)
             let count = try source.poll(deadline: nil, into: &buffer)
             #expect(count == 2)
             #expect(buffer[0].id == id1)
             #expect(buffer[1].id == id2)
         }
-
-        // MARK: - Wakeup
 
         @Test
         func `wakeup causes poll to return immediately`() throws {
@@ -267,16 +236,10 @@ extension Event.Fake {
 
             wakeup.wake()
 
-            // Deliberate: [Kernel.Event](repeating:count:) parses ambiguously against
-            // ISO_9945.Kernel.Event on Ubuntu release builds (b3c5b86e); the fully-qualified
-            // Swift.Array<Kernel.Event> form removes the ambiguity and must stay explicit.
-            // swiftlint:disable:next syntactic_sugar
             var buffer = Swift.Array<Kernel.Event>(repeating: .empty, count: 10)
             let count = try source.poll(deadline: nil, into: &buffer)
-            #expect(count == 0)  // Wakeup returns 0 events
+            #expect(count == 0)
         }
-
-        // MARK: - Close
 
         @Test
         func `close cleans up state`() throws {
@@ -286,10 +249,7 @@ extension Event.Fake {
 
             source.close()
 
-            // Controller should have received the close call
         }
-
-        // MARK: - Shutdown Simulation
 
         @Test
         func `simulated shutdown rejects new registrations`() throws {
@@ -321,10 +281,8 @@ extension Event.Fake {
     }
 }
 
-// MARK: - Empty Event Helper
-
 extension Kernel.Event {
-    /// Empty event for buffer initialization.
+
     static var empty: Kernel.Event {
         Kernel.Event(id: Event.ID(0), interest: [], flags: [])
     }

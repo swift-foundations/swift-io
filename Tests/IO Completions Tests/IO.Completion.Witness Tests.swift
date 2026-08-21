@@ -1,13 +1,3 @@
-//
-//  Completion.Witness Tests.swift
-//  swift-io
-//
-//  Cross-platform witness-level integration tests for IO Completions.
-//  Uses IO.completionsTest() — real io_uring when the Linux host permits
-//  it, epoll otherwise, and kqueue on macOS. Every integration test does
-//  real pipe I/O through the IO witness; the backend is opaque.
-//
-
 #if !os(Windows)
 
     import Testing
@@ -98,7 +88,6 @@
                     )
                     defer { unsafe oneByte.deallocate() }
 
-                    // Pre-fill with two bytes.
                     unsafe oneByte[0] = 0x01
                     _ = try await io.write(
                         to: pipe.write,
@@ -110,14 +99,12 @@
                         from: unsafe .init(UnsafeRawBufferPointer(oneByte))
                     )
 
-                    // Round 1.
                     try await io.ready(from: pipe.read, interest: .read)
                     _ = try await io.read(
                         from: pipe.read,
                         into: unsafe .init(oneByte)
                     )
 
-                    // Round 2 — fresh registration, must fire on remaining data.
                     try await io.ready(from: pipe.read, interest: .read)
                     _ = try await io.read(
                         from: pipe.read,

@@ -1,8 +1,3 @@
-//
-//  Basic.Run.Tests.swift
-//  swift-io
-//
-
 import IO_Test_Support
 import Memory_Primitives
 import Span_Raw_Primitives
@@ -15,7 +10,7 @@ struct IOBlockingRunTests {
         let io = IO.blocking()
         let pipe = try Kernel.Pipe.pipe()
 
-        let message: [UInt8] = [72, 101, 108, 108, 111]  // "Hello"
+        let message: [UInt8] = [72, 101, 108, 108, 111]
         let writePtr = unsafe UnsafeMutableRawBufferPointer.allocate(
             byteCount: message.count,
             alignment: 1
@@ -66,11 +61,7 @@ struct IOBlockingRunTests {
 
     @Test
     func `await between I/O calls — actor isolation keeps ops on executor`() async throws {
-        // Shape B: actor isolation guarantees the executor binding. After any
-        // suspension point (Task.yield, Task.sleep, @MainActor hop), the next
-        // await on io.* hops back to the impl actor's executor. Running 16
-        // concurrent instances exercises this without deadlocking the
-        // cooperative pool.
+
         let count = 16
         try await withThrowingTaskGroup(of: Void.self) { group in
             for _ in 0..<count {
@@ -90,7 +81,6 @@ struct IOBlockingRunTests {
                     _ = try await io.write(to: pipe.write, from: writeBuf)
                     _ = try await io.read(from: pipe.read, into: readBuf)
 
-                    // Suspension that previously broke TaskExecutor preference.
                     await Task.yield()
 
                     unsafe ptr[0] = 2

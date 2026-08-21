@@ -1,8 +1,3 @@
-//
-//  Basic.Error+Kernel Tests.swift
-//  swift-io
-//
-
 import IO_Test_Support
 import Testing
 

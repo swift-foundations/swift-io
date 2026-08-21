@@ -1,28 +1,3 @@
-//
-//  Events.Concurrent.Ready.Tests.swift
-//  swift-io
-//
-//  P0 regression gate: two concurrent awaits on the same fd+interest must
-//  both resolve correctly under the per-call channel dispatch model.
-//
-//  ## Shape
-//
-//  The Swift 6.3 region-isolation checker rejects two `async let` children
-//  both borrowing a `~Copyable` `Kernel.Descriptor` from the parent frame.
-//  The reproduction therefore uses the actor's internal whitebox surface:
-//
-//  1. Borrow `pipe.read` once at setup, passing it to
-//     `Event.Actor.register(_:)`. That produces an `Event.ID`
-//     (Copyable, Sendable).
-//  2. Fire two `async let` children calling
-//     `Event.Actor.wait(for:interest:)` on the captured
-//     registration ID. All parameters are Copyable — no `~Copyable`
-//     crosses the `async let` boundary.
-//
-//  Both calls create their own transient channel — no shared receiver,
-//  no single-suspender precondition to violate.
-//
-
 import IO_Test_Support
 @_spi(Syscall) import Kernel
 import Memory_Primitives
@@ -42,14 +17,8 @@ extension Event.Actor {
     struct `Concurrent Ready` {}
 }
 
-// MARK: - Concurrent reproduction (whitebox)
-
 extension Event.Actor.`Concurrent Ready` {
 
-    /// Two concurrent `wait(for: registrationID, interest: .read)` calls
-    /// on the SAME pre-obtained registration ID. Each creates its own
-    /// transient channel — both resolve after the pre-written byte makes
-    /// the read end ready (broadcast-to-all-senders on event dispatch).
     @Test
     func `two concurrent awaits on the same registration ID`() async throws {
         let actor = try Event.Actor()
@@ -59,8 +28,6 @@ extension Event.Actor.`Concurrent Ready` {
         try Kernel.File.Control.setNonBlocking(pipe.read)
         try Kernel.File.Control.setNonBlocking(pipe.write)
 
-        // Pre-fill the pipe so that once both awaiters register,
-        // readiness fires on the existing data.
         let one = UnsafeMutableRawBufferPointer.allocate(byteCount: 1, alignment: 1)
         defer { unsafe one.deallocate() }
         unsafe one[0] = 0x42
@@ -69,14 +36,8 @@ extension Event.Actor.`Concurrent Ready` {
             from: unsafe .init(UnsafeRawBufferPointer(one))
         )
 
-        // Single borrow at setup: obtain the registration ID for
-        // `pipe.read` once. After this await returns, the actor has
-        // dup'd the fd and the driver owns its own copy.
         let registrationID = try await actor.register(pipe.read)
 
-        // Two concurrent awaits on the same registration ID. Only
-        // Copyable values cross the async let boundary (actor reference
-        // + Event.ID + Interest) — no region-isolation rejection.
         async let first: Void = actor.wait(for: registrationID, interest: .read)
         async let second: Void = actor.wait(for: registrationID, interest: .read)
         try await first
@@ -84,13 +45,8 @@ extension Event.Actor.`Concurrent Ready` {
     }
 }
 
-// MARK: - Control: sequential readiness on the same fd
-
 extension Event.Actor.`Concurrent Ready` {
 
-    /// Control: sequential `io.ready` calls on the same fd must work both
-    /// before and after the per-call channel fix. If this regresses, the
-    /// fix broke the single-awaiter path. Uses the public facade.
     @Test
     func `sequential io.ready calls on the same fd`() async throws {
         let actor = try Event.Actor()

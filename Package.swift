@@ -117,8 +117,6 @@ let package = Package(
     ],
     targets: [
 
-        // MARK: - Events (strategy-only, domain-agnostic reactor)
-
         .target(
             name: "IO Events",
             dependencies: [
@@ -136,8 +134,6 @@ let package = Package(
                 .product(name: "Either Primitives", package: "swift-either-primitives"),
             ],
         ),
-
-        // MARK: - Completions (strategy-only, domain-agnostic proactor)
 
         .target(
             name: "IO Completions",
@@ -204,8 +200,6 @@ let package = Package(
             ]
         ),
 
-        // MARK: - Umbrella (strategies + host-adaptive selector)
-
         .target(
             name: "IO",
             dependencies: [
@@ -216,14 +210,6 @@ let package = Package(
                 .product(name: "Either Primitives", package: "swift-either-primitives"),
             ]
         ),
-
-        // MARK: - Test Support (hosts the Basic domain — consumed only by tests)
-        //
-        // Basic.Capabilities + Basic.Error + Kernel.Thread.Actor+Basic
-        // syscall extensions + per-strategy factories live here so the
-        // production surface of swift-io remains strategy-only. Downstream
-        // production packages (swift-file-system, swift-sockets,
-        // swift-server) define their own domain Capabilities.
 
         .target(
             name: "IO Test Support",
@@ -251,8 +237,6 @@ let package = Package(
             ],
             path: "Tests/Completions Support"
         ),
-
-        // MARK: - Tests
 
         .testTarget(
             name: "IO Basic Tests",
@@ -300,4 +284,3 @@ for target in package.targets where ![.system, .binary, .plugin, .macro].contain
 
     target.swiftSettings = (target.swiftSettings ?? []) + ecosystem + package
 }
-
