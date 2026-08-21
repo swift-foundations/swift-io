@@ -117,7 +117,7 @@
                 self.completion = unsafe Kernel.Thread.Executor.Completion(
                     kernel: consume kernel,
                     maxCompletionsPerPoll: maxCompletionsPerPoll,
-                    tick: { wait in .init(actorHandle: handle, wait: wait) }
+                    tick: { wait in unsafe .init(actorHandle: handle, wait: wait) }
                 )
                 handle.actor = self
             }
@@ -139,10 +139,10 @@
                 maxCompletionsPerPoll: Int = 256
             ) {
                 let handle = Handle()
-                self.completion = Kernel.Thread.Executor.Completion(
+                self.completion = unsafe Kernel.Thread.Executor.Completion(
                     kernel: consume kernel,
                     maxCompletionsPerPoll: maxCompletionsPerPoll,
-                    tick: { wait in .init(actorHandle: handle, wait: wait) }
+                    tick: { wait in unsafe .init(actorHandle: handle, wait: wait) }
                 )
                 handle.actor = self
             }
@@ -281,7 +281,7 @@
         /// inside `assumeIsolated`. `fileprivate` so the same-file
         /// `Outcome.init(actorHandle:wait:)` extension can invoke it.
         fileprivate func dispatch(_ events: UnsafeBufferPointer<Kernel.Completion.Event>) {
-            for event in unsafe events {
+            for unsafe event in unsafe events {
                 if let entry = entries.removeValue(forKey: event.token) {
                     if entry.flag.isSet {
                         entry.resolveAsCancelled()
@@ -332,7 +332,7 @@
 
             var submitError: Kernel.Completion.Error? = nil
 
-            if var descriptor = entry.descriptor.take() {
+            if let descriptor = entry.descriptor.take() {
                 do throws(Kernel.Completion.Error) {
                     try completion.kernel.submit(submission, target: descriptor)
                 } catch let e {
