@@ -135,7 +135,6 @@ let package = Package(
                 .product(name: "Witnesses", package: "swift-witnesses"),
                 .product(name: "Either Primitives", package: "swift-either-primitives"),
             ],
-            exclude: ["README.md"]
         ),
 
         // MARK: - Completions (strategy-only, domain-agnostic proactor)
@@ -202,8 +201,7 @@ let package = Package(
                     package: "swift-memory-allocation-primitives"
                 ),
                 .product(name: "Synchronizer Blocking", package: "swift-synchronizers"),
-            ],
-            exclude: ["README.md"]
+            ]
         ),
 
         // MARK: - Umbrella (strategies + host-adaptive selector)
@@ -277,7 +275,14 @@ let package = Package(
                 "IO Test Support",
             ]
         ),
-    ] + eventsTests
+        .testTarget(
+            name: "IO Events Tests",
+            dependencies: [
+                "IO Events",
+                "IO Test Support",
+            ]
+        )
+    ]
 )
 
 for target in package.targets where ![.system, .binary, .plugin, .macro].contains(target.type) {
@@ -299,19 +304,3 @@ for target in package.targets where ![.system, .binary, .plugin, .macro].contain
     target.swiftSettings = (target.swiftSettings ?? []) + ecosystem + package
 }
 
-let eventsTests: [Target] = {
-    #if os(Windows)
-        []
-    #else
-        [
-            .testTarget(
-                name: "IO Events Tests",
-                dependencies: [
-                    "IO Events",
-                    "IO Test Support",
-                    .product(name: "Heap Primitive", package: "swift-heap-primitives"),
-                ]
-            )
-        ]
-    #endif
-}()
