@@ -2,23 +2,6 @@
 
 import PackageDescription
 
-let eventsTests: [Target] = {
-    #if os(Windows)
-        []
-    #else
-        [
-            .testTarget(
-                name: "IO Events Tests",
-                dependencies: [
-                    "IO Events",
-                    "IO Test Support",
-                    .product(name: "Heap Primitive", package: "swift-heap-primitives"),
-                ]
-            )
-        ]
-    #endif
-}()
-
 let package = Package(
     name: "swift-io",
     platforms: [
@@ -29,17 +12,44 @@ let package = Package(
         .visionOS(.v27),
     ],
     products: [
-        .library(name: "IO", targets: ["IO"]),
-        .library(name: "IO Events", targets: ["IO Events"]),
-        .library(name: "IO Completions", targets: ["IO Completions"]),
-        .library(name: "IO Test Support", targets: ["IO Test Support"]),
-        .library(name: "IO Completions Test Support", targets: ["IO Completions Test Support"]),
+        .library(
+            name: "IO",
+            targets: ["IO"]
+        ),
+        .library(
+            name: "IO Events",
+            targets: ["IO Events"]
+        ),
+        .library(
+            name: "IO Completions",
+            targets: ["IO Completions"]
+        ),
+        .library(
+            name: "IO Test Support",
+            targets: ["IO Test Support"]
+        ),
+        .library(
+            name: "IO Completions Test Support",
+            targets: ["IO Completions Test Support"]
+        ),
     ],
     dependencies: [
-        .package(url: "https://github.com/swift-foundations/swift-kernel.git", branch: "main"),
-        .package(url: "https://github.com/swift-foundations/swift-async.git", branch: "main"),
-        .package(url: "https://github.com/swift-foundations/swift-executors.git", branch: "main"),
-        .package(url: "https://github.com/swift-foundations/swift-threads.git", branch: "main"),
+        .package(
+            url: "https://github.com/swift-foundations/swift-kernel.git",
+            branch: "main"
+        ),
+        .package(
+            url: "https://github.com/swift-foundations/swift-async.git",
+            branch: "main"
+        ),
+        .package(
+            url: "https://github.com/swift-foundations/swift-executors.git",
+            branch: "main"
+        ),
+        .package(
+            url: "https://github.com/swift-foundations/swift-threads.git",
+            branch: "main"
+        ),
         .package(
             url: "https://github.com/swift-foundations/swift-synchronizers.git",
             branch: "main"
@@ -100,7 +110,10 @@ let package = Package(
             url: "https://github.com/swift-primitives/swift-witness-primitives.git",
             branch: "main"
         ),
-        .package(url: "https://github.com/swift-foundations/swift-witnesses.git", branch: "main"),
+        .package(
+            url: "https://github.com/swift-foundations/swift-witnesses.git",
+            branch: "main"
+        ),
     ],
     targets: [
 
@@ -130,16 +143,46 @@ let package = Package(
         .target(
             name: "IO Completions",
             dependencies: [
-                .product(name: "Kernel", package: "swift-kernel"),
-                .product(name: "Kernel Completion", package: "swift-kernel"),
-                .product(name: "IO Primitives", package: "swift-io-primitives"),
-                .product(name: "Executors", package: "swift-executors"),
-                .product(name: "Async", package: "swift-async"),
-                .product(name: "Memory Primitives", package: "swift-memory-primitives"),
-                .product(name: "Dictionary Primitives", package: "swift-dictionary-primitives"),
-                .product(name: "Hash Indexed Primitive", package: "swift-hash-table-primitives"),
-                .product(name: "Hash Tagged Primitives", package: "swift-hash-primitives"),
-                .product(name: "Buffer Primitive", package: "swift-buffer-primitives"),
+                .product(
+                    name: "Kernel",
+                    package: "swift-kernel"
+                ),
+                .product(
+                    name: "Kernel Completion",
+                    package: "swift-kernel"
+                ),
+                .product(
+                    name: "IO Primitives",
+                    package: "swift-io-primitives"
+                ),
+                .product(
+                    name: "Executors",
+                    package: "swift-executors"
+                ),
+                .product(
+                    name: "Async",
+                    package: "swift-async"
+                ),
+                .product(
+                    name: "Memory Primitives",
+                    package: "swift-memory-primitives"
+                ),
+                .product(
+                    name: "Dictionary Primitives",
+                    package: "swift-dictionary-primitives"
+                ),
+                .product(
+                    name: "Hash Indexed Primitive",
+                    package: "swift-hash-table-primitives"
+                ),
+                .product(
+                    name: "Hash Tagged Primitives",
+                    package: "swift-hash-primitives"
+                ),
+                .product(
+                    name: "Buffer Primitive",
+                    package: "swift-buffer-primitives"
+                ),
                 .product(
                     name: "Buffer Linear Primitive",
                     package: "swift-buffer-linear-primitives"
@@ -255,3 +298,20 @@ for target in package.targets where ![.system, .binary, .plugin, .macro].contain
 
     target.swiftSettings = (target.swiftSettings ?? []) + ecosystem + package
 }
+
+let eventsTests: [Target] = {
+    #if os(Windows)
+        []
+    #else
+        [
+            .testTarget(
+                name: "IO Events Tests",
+                dependencies: [
+                    "IO Events",
+                    "IO Test Support",
+                    .product(name: "Heap Primitive", package: "swift-heap-primitives"),
+                ]
+            )
+        ]
+    #endif
+}()
