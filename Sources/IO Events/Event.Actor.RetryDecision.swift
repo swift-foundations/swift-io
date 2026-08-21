@@ -12,7 +12,7 @@
 // gates Polling !os(Windows)). Gated whole-file to match the IO Completions
 // posture; the Windows leg uses the blocking path per IO+File.System+Default.
 #if !os(Windows)
-    public import Kernel
+    import Kernel
 
     extension Event.Actor {
         /// Outcome of classifying a wait failure.
